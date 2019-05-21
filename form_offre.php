@@ -21,42 +21,54 @@
                     </div>
 		</div>
                 <div class="control-group" id="doc1" hidden="true">
-                    <label class="control-label">Document1:</label>
+                    <label class="control-label">Devis1:</label>
                     <div class="controls">
                         <input type="file"  name="doc1">
 		            </div>
 		        </div>
                 <div class="control-group" id="doc2" hidden="true">
-                    <label class="control-label">Document2:</label>
+                    <label class="control-label">Devis2:</label>
                     <div class="controls">
                         <input type="file"  name="doc2">
                     </div>
                 </div>
-                <div class="control-group" id="devis" hidden="true">
-                    <label class="control-label">Devis:</label>
+                <div class="control-group" id="doc3" hidden="true">
+                    <label class="control-label">Devis3:</label>
                     <div class="controls">
-                        <input type="file"  name="devis">
+                        <input type="file"  name="doc3">
                     </div>
                 </div>
-                <div class="control-group">
-                    <label class="control-label">25K</label>
+                <div class="control-group" id="doc4" hidden="true">
+                    <label class="control-label">RIB:</label>
                     <div class="controls">
+                        <input type="file"  name="doc4">
+                    </div>
+                </div>
+                <div class="control-group" id="doc5" hidden="true">
+                    <label class="control-label">PTF:</label>
+                      <div class="controls">
+                        <input type="file"  name="doc5">
+                      </div>
+                </div>
+                    <div class="control-group" id="doc6" hidden="true">
+                        <label class="control-label">Publication:</label>
+                        <div class="controls">
+                            <input type="file"  name="doc6">
+                        </div>
+                    </div>
+
+                        <label class="control-label">5K < 25K</label>
                          <input type="radio" class="custom-control-input" id="defaultGroupExample1" value="1" name="mpRadios" >
-                    </div>
-                    <label class="control-label">25K < X < 90K</label>
-                    <div class="controls">
+                         <label class="control-label">25K < X < 90K</label>
                         <input type="radio" class="custom-control-input" id="defaultGroupExample2" value="2" name="mpRadios" >
-                    </div>
-                    <label class="control-label">> 90K</label>
-                    <div class="controls">
+                        <label class="control-label"> > 90K</label>
                         <input type="radio" class="custom-control-input" id="defaultGroupExample3" value="3" name="mpRadios" >
-                    </div>
-                </div>
+
                 <input type="hidden"  name="form" id="login" value="offre" >
 
         </div>
         <div class="controls">
-            <button type="submit" class="btn">OK</button>
+            <button type="submit" class="btn">Valider</button>
         </div>
         </form>
     </div>
@@ -66,20 +78,39 @@
 <script type="text/javascript">
     $(document).ready(function () {
         $("input[type='radio']").on('change', function () {
+            var value1 = $("input[id='defaultGroupExample1']:checked").val();
             var selectedValue = $("input[id='defaultGroupExample2']:checked").val();
             var selectedValue2 = $("input[id='defaultGroupExample3']:checked").val();
-            if (selectedValue) {
-                document.getElementById("doc1").hidden = true;
-                document.getElementById("doc2").hidden = true;
-                document.getElementById("devis").hidden = false;
-            } else if (selectedValue2) {
+
+            if(value1){
                 document.getElementById("doc1").hidden = false;
                 document.getElementById("doc2").hidden = false;
-                document.getElementById("devis").hidden = true;
-            } else {
-                document.getElementById("devis").hidden = true;
+                document.getElementById("doc3").hidden = false;
+                document.getElementById("doc4").hidden = false;
+                document.getElementById("doc5").hidden = true;
+                document.getElementById("doc6").hidden = true;
+            }
+            if (selectedValue) {
                 document.getElementById("doc1").hidden = false;
+                document.getElementById("doc2").hidden = false;
+                document.getElementById("doc3").hidden = false;
+                document.getElementById("doc4").hidden = false;
+                document.getElementById("doc5").hidden = true;
+                document.getElementById("doc6").hidden = true;
+            } else if (selectedValue2) {
+                document.getElementById("doc1").hidden = true;
                 document.getElementById("doc2").hidden = true;
+                document.getElementById("doc3").hidden = true;
+                document.getElementById("doc4").hidden = true;
+                document.getElementById("doc5").hidden = false;
+                document.getElementById("doc6").hidden = false;
+            } else {
+                document.getElementById("doc1").hidden = true;
+                document.getElementById("doc2").hidden = true;
+                document.getElementById("doc3").hidden = true;
+                document.getElementById("doc4").hidden = true;
+                document.getElementById("doc5").hidden = false;
+                document.getElementById("doc6").hidden = false;
             }
         });
     });
