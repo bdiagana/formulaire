@@ -1,0 +1,25 @@
+{
+  "name": "ged",
+  "version": "1.0.0",
+  "main": "app.js",
+  "dependencies": {
+    "express": "^4.17.0",
+    "npm": "^6.9.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon app.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bdiagana/formulaire.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bdiagana/formulaire/issues"
+  },
+  "homepage": "https://github.com/bdiagana/formulaire#readme",
+  "description": ""
+}
