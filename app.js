@@ -6,6 +6,7 @@ const express = require('express');
 const app = express();
 const conf = require('./load_conf');
 
+
 //variable de session dms
 var mydms_session;
 var mydms_cookie;
@@ -13,10 +14,12 @@ var mydms_cookie;
 app.use(express.urlencoded());
 app.use(express.static(__dirname + '/public'));
 
-app.get('/signin', (req, res) => send_form('formulaires/form_login.php',res));	
-app.get('/signup', (req, res) => send_form('formulaires/form_creation.php',res));	
-app.get('/verify', (req, res) => send_form('formulaires/form_code.php',res));
-app.get('/postdocs', (req, res) => send_form('formulaires/form_offre.php',res));
+app.set('view engine', 'ejs')
+
+app.get('/signin', (req, res) => res.render('form_login'));
+app.get('/signup', (req, res) => res.render('form_creation'));
+app.get('/verify', (req, res) => res.render('form_code'));
+app.get('/postdocs', (req, res) => res.render('form_offre'));
 
 app.post('/process', (req, res) => {
 	console.log(req.body)
@@ -28,10 +31,11 @@ app.post('/process', (req, res) => {
 			http_request('{"user":"' + user + '","pass":"' + pass + '"}',"/login","POST",connected,res);
 		break;
 		case "signup":
-				
+			console.log(req.body)
+				res.render('form_code',{ mail : req.body['mail'] })
 		break;
 		case "offre":
-			res.statusCode = 200; 
+			res.statusCode = 200;
 			console.log(JSON.stringify(req.body));
 			res.end(JSON.stringify(req.body));
 		break;
@@ -118,13 +122,3 @@ function http_request(data, string_path,string_method,cb,response_handle) {
   	post_req.write(data);
   	post_req.end();
 }
-
-function send_form(path,res){
-  	res.statusCode = 200;
-  	res.setHeader('Content-Type', 'text/html');
-	var str = fs.readFileSync("formulaires/header.php",'utf-8');
-	str += fs.readFileSync(path, 'utf8');
-	res.send(str);
-
-}
-

@@ -1,6 +1,7 @@
-<div class="container-fluid"> 
+<% include header %>
+<div class="container-fluid">
   <div class="row-fluid">
-    <legend>Connexion</legend> 
+    <legend>Connexion</legend>
     <form action="/process" method="post" novalidate="novalidate">
       <input type="hidden" name="form" value="signin">
       <div class="form-group col-md-3">
@@ -19,5 +20,4 @@
     </form>
   </div>
 </div>
-</body> 
-</html>
+<% include footer %>
