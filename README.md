@@ -17,6 +17,6 @@
 
 Pas besoin de le relancer à chaque modification (utilisation de nodemon)
 
-**fichier de configuration de l'application
+**fichier de configuration de l'application**
 
-conf/node-app.conf
+se trouve dans conf/node-app.conf
