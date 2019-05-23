@@ -4,14 +4,11 @@ const querystring = require('querystring');
 const fs = require('fs');
 const express = require('express');
 const app = express();
+const conf = require('./load_conf');
+console.log(conf)
 
 //variable de session dms
 var mydms_session = null;
-
-// informations pour la connexion
-const hostname = '0.0.0.0'; 
-const port = 20083;
-
 
 app.use(express.urlencoded());
 app.get('/signin', (req, res) => send_form('formulaires/form_login.php',res));	
@@ -23,7 +20,6 @@ app.post('/process', (req, res) => {
 		case "signin":
 			var user = req.body['user'];
 			var pass = req.body['pass'];
-			console.log(JSON.stringify(req.body));
 			if (mydms_session) http_request('{}',"/logout","POST",disconnect);
 			http_request('{"user":"' + user + '","pass":"' + pass + '"}',"/login","POST",connected,res);
 		break;
@@ -40,7 +36,7 @@ app.post('/process', (req, res) => {
 });
 app.use(express.static(__dirname + '/public'));
 
-app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+app.listen(conf.app.port, () => console.log(`Example app listening on port ${conf.app.port}!`));
 
 // callback détail compte
 function account(chunk){
@@ -54,7 +50,6 @@ function connected(chunk,result,res){
 	var cookie = res.headers['set-cookie'][0];
 	var session = cookie.split(";")[0];
 	var mydms_session = session.split("=")[1];
-	console.log("admin here : " + mydms_session);
 	if (result){
 		if (mydms_session != null & mydms_session != "deleted"){
 			result.setHeader("set-cookie","mydms_session=" + mydms_session);
@@ -82,8 +77,8 @@ function http_request(data, string_path,string_method,cb,result) {
 
 	// An object of options to indicate where to post to
 	var post_options = {
-		host: 'localhost',
-	        port: '20080',
+		host: conf.gedportal.hostname,
+	        port: conf.gedportal.port,
 	      	path: '/restapi/index.php'+string_path,
 	      	method: string_method,
 	      	headers: {
@@ -107,7 +102,6 @@ function http_request(data, string_path,string_method,cb,result) {
       		});
   	});
 
-	console.log(data);
   	// post the data
   	post_req.write(data);
   	post_req.end();

@@ -15,13 +15,13 @@
 						<div class="control-group">
 							<label class="control-label">Identifiant:</label> 
 							<div class="controls">
-								<input type="text" id="login" name="user" placeholder="login" autocomplete="off" required="" aria-required="true">
+								<input type="text" id="login" name="user" placeholder="Entrez votre identifiant" autocomplete="off" required="" aria-required="true">
 							</div>
 						</div>
 						<div class="control-group"> 
 							<label class="control-label">Mot de passe:</label> 
                             				<div class="controls">
-								<input type="password" id="pwd" name="pass" autocomplete="off" required="" aria-required="true">
+								<input type="password" id="pwd" name="pass" placeholder="Entrez votre mot de passe" autocomplete="off" required="" aria-required="true">
 							</div>
                         			</div> 
 						<div class="controls"> 
