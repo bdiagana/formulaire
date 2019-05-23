@@ -16,3 +16,7 @@
     npm run start
 
 Pas besoin de le relancer à chaque modification (utilisation de nodemon)
+
+**fichier de configuration de l'application
+
+conf/node-app.conf
