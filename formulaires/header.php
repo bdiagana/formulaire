@@ -8,4 +8,10 @@
 		<link type="text/css" href="css/bootstrap-grid.css" rel="stylesheet">
 		<title>GEDi: Connexion</title>
 	</head>
+<body class="login">
+	<div class="navbar navbar-dark bg-dark">
+            <a class="navbar-brand" href="form_login.php">GEDi</a>
+        </div>
+    </div>
+</div>
 

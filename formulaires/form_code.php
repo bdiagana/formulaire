@@ -1,11 +1,3 @@
-<body class="login">
-<div class="navbar navbar-inverse navbar-fixed-top">
-    <div class="navbar-inner">
-        <div class="container-fluid">
-            <a class="brand" href="form_login.php">GEDi</a>
-        </div>
-    </div>
-</div>
 <div class="container-fluid">
     <div class="row-fluid">
         <legend>Code de vérification</legend>

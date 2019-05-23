@@ -5,22 +5,26 @@ const fs = require('fs');
 const express = require('express');
 const app = express();
 const conf = require('./load_conf');
-console.log(conf)
 
 //variable de session dms
-var mydms_session = null;
+var mydms_session;
+var mydms_cookie;
 
 app.use(express.urlencoded());
+app.use(express.static(__dirname + '/public'));
+
 app.get('/signin', (req, res) => send_form('formulaires/form_login.php',res));	
 app.get('/signup', (req, res) => send_form('formulaires/form_creation.php',res));	
 app.get('/verify', (req, res) => send_form('formulaires/form_code.php',res));
 app.get('/postdocs', (req, res) => send_form('formulaires/form_offre.php',res));
+
 app.post('/process', (req, res) => {
+	console.log(req.body)
 	switch(req.body['form']){
 		case "signin":
 			var user = req.body['user'];
 			var pass = req.body['pass'];
-			if (mydms_session) http_request('{}',"/logout","POST",disconnect);
+			//if (mydms_session) http_request('{}',"/logout","POST",disconnect);
 			http_request('{"user":"' + user + '","pass":"' + pass + '"}',"/login","POST",connected,res);
 		break;
 		case "signup":
@@ -34,7 +38,6 @@ app.post('/process', (req, res) => {
 
 	}
 });
-app.use(express.static(__dirname + '/public'));
 
 app.listen(conf.app.port, () => console.log(`Example app listening on port ${conf.app.port}!`));
 
@@ -47,21 +50,26 @@ function account(chunk){
 
 //callback connection
 function connected(chunk,result,res){
-	var cookie = res.headers['set-cookie'][0];
-	var session = cookie.split(";")[0];
-	var mydms_session = session.split("=")[1];
-	if (result){
-		if (mydms_session != null & mydms_session != "deleted"){
-			result.setHeader("set-cookie","mydms_session=" + mydms_session);
-			result.statusCode = 302 ;
-			result.setHeader("Location","/postdocs");
-			result.end("");
+	if (res.headers){
+		var cookie = res.headers['set-cookie'];
+		if (result){
+			if (cookie){
+				result.setHeader("set-cookie",cookie);
+				result.statusCode = 302 ;
+				result.setHeader("Location","/postdocs");
+				result.end("");
+			}
+			else {
+				result.statusCode = 302;
+				result.setHeader("Location","/signin");
+				result.end("");
+			}
 		}
-		else {
-			result.statusCode = 302;
-			result.setHeader("Location","/signin");
-			result.end("");
-		}
+	}
+	else {
+		result.statusCode = 302;
+		result.setHeader("Location","/signin");
+		result.end("");
 	}
 }
 
@@ -73,7 +81,8 @@ function disconnect(chunk){
 // string_path : chemin de l'API sur lequel requeter
 // string_method : méthode à utiliser GET,POST,PUT,DELETE
 // cb : fonction de callback
-function http_request(data, string_path,string_method,cb,result) {
+// response_handle : handle de reponse pour l'utilisateur
+function http_request(data, string_path,string_method,cb,response_handle) {
 
 	// An object of options to indicate where to post to
 	var post_options = {
@@ -96,8 +105,11 @@ function http_request(data, string_path,string_method,cb,result) {
       		res.setEncoding('utf8');
       		res.on('data', function (chunk) {
 			if (cb) {
-				if (result) cb(chunk,result,res);
+				if (response_handle) cb(chunk,response_handle,res);
 				else cb(chunk);
+			}
+			else {
+				console.log('request without callback')
 			}
       		});
   	});
