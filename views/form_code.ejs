@@ -1,24 +1,21 @@
 <% include header %>
 <div class="container-fluid">
-    <div class="row-fluid">
-        <legend>Code de vérification</legend>
-        <div class="well">
-            <form class="form-horizontal" action="test.php" method="post" enctype="multipart/form-data" name="form" id="form">
-                <p> Vous avez reçu un mail à l'adresse <% mail %> celui-ci contient un code de vérification.</p>
-                <div class="control-group">
-                    <label class="control-label">Code:</label>
-                    <div class="controls">
-                        <input type="text" id="login" name="login">
-                    </div>
-                </div>
-                        <input type="hidden"  name="verify" id="login">
+  <div class="row-fluid">
+    <legend>Code de vérification</legend>
+    <form action="/process" method="post">
 
-                </div>
-                <div class="controls">
-                    <button type="submit" class="btn">OK</button>
-                </div>
-            </form>
-        </div>
-    </div>
+      <input type="hidden" name="form" value="verify">
+
+      <p> Vous avez reçu un mail à l'adresse <%- mail %> celui-ci contient un code de vérification.</p>
+
+      <div class="form-group col-md-3">
+        <label for="code">Code :</label>
+        <input type="text" class="form-control" name="code" id="code">
+      </div>
+
+      <button type="submit" class="btn btn-primary">Valider</button>
+
+    </form>
+  </div>
 </div>
 <% include footer %>

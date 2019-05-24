@@ -18,26 +18,25 @@ app.set('view engine', 'ejs')
 
 app.get('/signin', (req, res) => res.render('form_login'));
 app.get('/signup', (req, res) => res.render('form_creation'));
-app.get('/verify', (req, res) => res.render('form_code'));
 app.get('/postdocs', (req, res) => res.render('form_offre'));
 
 app.post('/process', (req, res) => {
 	console.log(req.body)
 	switch(req.body['form']){
 		case "signin":
-			var user = req.body['user'];
-			var pass = req.body['pass'];
-			//if (mydms_session) http_request('{}',"/logout","POST",disconnect);
-			http_request('{"user":"' + user + '","pass":"' + pass + '"}',"/login","POST",connected,res);
+		http_request('{"user":"' + req.body.user + '","pass":"' + req.body.pass + '"}',"/login","POST",connected,res);
 		break;
 		case "signup":
-			console.log(req.body)
-				res.render('form_code',{ mail : req.body['mail'] })
+		console.log(req.body.mail)
+		res.render('form_code',{ mail: req.body.mail, test: 'Salut' })
 		break;
 		case "offre":
-			res.statusCode = 200;
-			console.log(JSON.stringify(req.body));
-			res.end(JSON.stringify(req.body));
+		res.statusCode = 200;
+		console.log(JSON.stringify(req.body));
+		res.end(JSON.stringify(req.body));
+		break;
+		case 'verify':
+		res.render('form_offre');
 		break;
 
 	}
@@ -91,23 +90,23 @@ function http_request(data, string_path,string_method,cb,response_handle) {
 	// An object of options to indicate where to post to
 	var post_options = {
 		host: conf.gedportal.hostname,
-	        port: conf.gedportal.port,
-	      	path: '/restapi/index.php'+string_path,
-	      	method: string_method,
-	      	headers: {
-		  	'Content-Type': 'application/json',
-		  	'Content-Length': Buffer.byteLength(data)
-	      	}
+		port: conf.gedportal.port,
+		path: '/restapi/index.php'+string_path,
+		method: string_method,
+		headers: {
+			'Content-Type': 'application/json',
+			'Content-Length': Buffer.byteLength(data)
+		}
 	};
 	// si session mydms : ajout du header cookie dans la requete
 	if (mydms_session && mydms_session != ""){
 		post_options.headers["Cookie"] = 'mydms_session='+mydms_session;
 	}
 
-  	// Set up the request
-  	var post_req = http.request(post_options, function(res) {
-      		res.setEncoding('utf8');
-      		res.on('data', function (chunk) {
+	// Set up the request
+	var post_req = http.request(post_options, function(res) {
+		res.setEncoding('utf8');
+		res.on('data', function (chunk) {
 			if (cb) {
 				if (response_handle) cb(chunk,response_handle,res);
 				else cb(chunk);
@@ -115,10 +114,10 @@ function http_request(data, string_path,string_method,cb,response_handle) {
 			else {
 				console.log('request without callback')
 			}
-      		});
-  	});
+		});
+	});
 
-  	// post the data
-  	post_req.write(data);
-  	post_req.end();
+	// post the data
+	post_req.write(data);
+	post_req.end();
 }
