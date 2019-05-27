@@ -90,3 +90,5 @@ typings/
 conf/node-app.conf
 
 .idea/
+
+uploads/

@@ -5,7 +5,7 @@ const fs = require('fs');
 const express = require('express');
 const app = express();
 const conf = require('./load_conf');
-const _ = require('lodash');
+const multer = require('multer');
 const mail = require('nodemailer').createTransport({
 	service: 'gmail',
 	auth: {
@@ -20,8 +20,11 @@ var mydms_session;
 var mydms_cookie;
 var admin_session;
 
+var upload = multer({ dest: 'uploads/' })
+
 // middleware
 app.use(express.urlencoded());
+app.use(express.json());
 app.use(express.static(__dirname + '/public'));
 
 // paramétrage moteur de template
@@ -32,9 +35,19 @@ app.get('/signin', (req, res) => res.render('form_login'));
 app.get('/signup', (req, res) => res.render('form_creation'));
 app.get('/postdocs', (req, res) => res.render('form_offre'));
 
+var arrays_to_upload = [
+  { name: 'devis1', maxCount: 1 },
+	{ name: 'devis2', maxCount: 1 },
+	{ name: 'devis3', maxCount: 1 },
+	{ name: 'rib', maxCount: 1 },
+	{ name: 'ptf', maxCount: 1 },
+	{ name: 'publication', maxCount: 1 }
+]
+
 // post routes
-app.post('/process', (req, res) => {
-	console.log(req.body)
+app.post('/process',upload.fields(arrays_to_upload, 12), (req, res) => {
+	console.log('process : ' + JSON.stringify(req.files))
+
 	switch(req.body['form']){
 		case "signin":
 
@@ -48,8 +61,9 @@ app.post('/process', (req, res) => {
 
 		break;
 		case "offre":
+
+		console.log('offre ' +JSON.stringify(req.files))
 		res.statusCode = 200;
-		console.log(JSON.stringify(req.body));
 		res.end(JSON.stringify(req.body));
 		break;
 		case 'verify':
@@ -133,7 +147,7 @@ function admin_connection(chunk,orig_request_handle,orig_response_handle,res){
 			var comment;
 
 			// teste  présence des champs pour la concaténation
-			if (orig_request_handle.body.societe) comment += orig_request_handle.body.societe + "\n";
+			if (orig_request_handle.body.societe) comment = orig_request_handle.body.societe + "\n";
 			if (orig_request_handle.body.addresse) comment += orig_request_handle.body.adresse + "\n";
 			if (orig_request_handle.body.telephonne) comment += orig_request_handle.body.telephone;
 
@@ -183,13 +197,22 @@ function account_creation(chunk,orig_request_handle,orig_response_handle,res){
 			}
 		});
 
-		orig_response_handle.render("./form_code", {mail: orig_request_handle.body.mail});
+		http_request('{"disable":"true"}',"/users/" + orig_request_handle.body.user + "/disable",'PUT',user_disabled,orig_request_handle,orig_response_handle);
 	}
 	else {
-		orig_response_handle.statusCode = 302 ;
-		orig_response_handle.setHeader("Location","/signup");
-		orig_response_handle.body = orig_request_handle.body;
-		orig_response_handle.end("");
+		var infos_back = {
+			nom: orig_request_handle.body.nom,
+			prenom: orig_request_handle.body.prenom,
+			societe: orig_request_handle.body.societe,
+			adresse: orig_request_handle.body.adresse,
+			mail: orig_request_handle.body.mail,
+			user: orig_request_handle.body.user,
+			pass: orig_request_handle.body.pass,
+			passconf: orig_request_handle.body.passconf,
+			error: 'Echec lors de la création du compte !'
+		};
+
+		orig_response_handle.render("form_creation", infos_back);
 		console.log('trise')
 	}
 }
@@ -198,17 +221,17 @@ function account_creation(chunk,orig_request_handle,orig_response_handle,res){
 function user_connected(chunk,orig_request_handle,orig_response_handle,res){
 	if (res.headers){
 		var cookie = res.headers['set-cookie'];
-		if (response_handle){
+		if (orig_response_handle){
 			if (cookie){
-				response_handle.setHeader("set-cookie",cookie);
-				response_handle.statusCode = 302 ;
-				response_handle.setHeader("Location","/postdocs");
-				response_handle.end("");
+				orig_response_handle.setHeader("set-cookie",cookie);
+				orig_response_handle.statusCode = 302 ;
+				orig_response_handle.setHeader("Location","/postdocs");
+				orig_response_handle.end("");
 			}
 			else {
-				response_handle.statusCode = 302;
-				response_handle.setHeader("Location","/signin");
-				response_handle.end("");
+				orig_response_handle.statusCode = 302;
+				orig_response_handle.setHeader("Location","/signin");
+				orig_response_handle.end("");
 			}
 		}
 	}
@@ -216,6 +239,18 @@ function user_connected(chunk,orig_request_handle,orig_response_handle,res){
 		response_handle.statusCode = 302;
 		response_handle.setHeader("Location","/signin");
 		response_handle.end("");
+	}
+}
+
+function user_disabled(chunk,orig_request_handle,orig_response_handle,res){
+	if (res){
+		var success = JSON.parse(chunk)['success'];
+		if(success){
+			orig_response_handle.render("./form_code", {mail: orig_request_handle.body.mail});
+		}
+		else {
+			console.log('user not disabled')
+		}
 	}
 }
 

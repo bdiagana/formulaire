@@ -1,4 +1,7 @@
 $(document).ready(function () {
+
+  $("#errordiv").delay(1000).slideUp();
+
   $("input[type='radio']").on('change', function () {
     var selectedValue1 = $("input[id='defaultGroupExample1']:checked").val();
     var selectedValue2 = $("input[id='defaultGroupExample2']:checked").val();
@@ -53,4 +56,3 @@ $(document).ready(function () {
     }
   });
 });
-

@@ -1,4 +1,9 @@
 <% include header %>
+<% if (locals.error){ %>
+<div class="alert alert-danger" id="errordiv" role="alert">
+  <%= error %>
+</div>
+<% } %>
 <div class="container-fluid">
   <div class="row-fluid">
     <legend>Création de compte</legend>
@@ -8,42 +13,42 @@
 
       <div class="form-group col-md-3">
         <label for="nom">Nom :</label>
-        <input type="text" class="form-control" name="nom" id="nom">
+        <input type="text" class="form-control" name="nom" id="nom" value="<%- nom %>">
       </div>
 
       <div class="form-group col-md-3">
         <label for="prenom">Prénom :</label>
-        <input type="text" class="form-control" name="prenom" id="prenom">
+        <input type="text" class="form-control" name="prenom" id="prenom" value="<%- prenom %>">
       </div>
 
       <div class="form-group col-md-3">
         <label for="societe">Société :</label>
-        <input type="text" class="form-control" name="societe" id="societe">
+        <input type="text" class="form-control" name="societe" id="societe" value="<%- societe %>">
       </div>
 
       <div class="form-group col-md-3">
         <label for="adresse">Adresse postale :</label>
-        <input type="text" class="form-control" name="adresse" id="adresse">
+        <input type="text" class="form-control" name="adresse" id="adresse" value="<%- adresse %>">
       </div>
 
       <div class="form-group col-md-3">
         <label for="mail">Adresse mail :</label>
-        <input type="text" class="form-control" name="mail" id="mail">
+        <input type="text" class="form-control" name="mail" id="mail" value="<%- mail %>">
       </div>
 
       <div class="form-group col-md-3">
         <label for="user">Nom d'utilisateur :</label>
-        <input type="text" class="form-control" name="user" id="user">
+        <input type="text" class="form-control" name="user" id="user" value="<%- user %>">
       </div>
 
       <div class="form-group col-md-3">
         <label for="pass">Mot de passe :</label>
-        <input type="password" class="form-control" name="pass" id="pass">
+        <input type="password" class="form-control" name="pass" id="pass" value="<%- pass %>">
       </div>
 
       <div class="form-group col-md-3">
         <label for="passconf">Confirmation :</label>
-        <input type="password" class="form-control" name="passconf" id="passconf">
+        <input type="password" class="form-control" name="passconf" id="passconf" value="<%- passconf %>">
       </div>
 
       <button type="submit" class="btn btn-primary">Créer ce compte</button>
