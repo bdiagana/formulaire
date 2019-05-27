@@ -5,9 +5,14 @@
   "dependencies": {
     "ejs": "^2.6.1",
     "express": "^4.17.0",
+    "ini": "^1.3.5",
     "lodash": "^4.17.11",
+<<<<<<< HEAD
     "mail": "^0.2.3",
     "nodemailer": "^6.2.1",
+=======
+    "nodemon": "^1.19.1",
+>>>>>>> 47350b01628a730b15fb47698bdc07f9000fc95c
     "npm": "^6.9.0"
   },
   "devDependencies": {},
