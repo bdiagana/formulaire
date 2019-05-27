@@ -4,6 +4,7 @@
     <legend>Offre d'appel</legend>
     <form action="/process" method="post" enctype="multipart/form-data" name="form" id="form">
       <div class="form-group control-group col-md-1">
+        <input type="hidden" name="form" id="login" value="offre">
         <label for="selectMenu" class="control-label">Année :</label>
         <select id="selectMenu" class="custom-select ">
 
@@ -15,71 +16,77 @@
         </div>
 
 
-        <div class="form-group control-group">
+        <div class="form-group control-group col-md-3">
           <label class="control-label">Somme :</label>
           <div class="btn-group btn-group-toggle" data-toggle="buttons" id="sumselector">
-            <label class="btn btn-secondary active">
-              <input type="radio" name="options" id="defaultGroupExample1" autocomplete="off" checked> Moins de 5K
+            <label class="btn btn-secondary active btn-sm">
+              <input type="radio" name="options" id="defaultGroupExample1" autocomplete="off" checked onchange="jascript:change_state(this);"> Moins de 5K
             </label>
-            <label class="btn btn-secondary">
-              <input type="radio" name="options" id="defaultGroupExample2" autocomplete="off"> Entre 5K et 25K
+            <label class="btn btn-secondary btn-sm">
+              <input type="radio" name="options" id="defaultGroupExample2" autocomplete="off" onchange="jascript:change_state(this);"> Entre 5K et 25K
             </label>
-            <label class="btn btn-secondary">
-              <input type="radio" name="options" id="defaultGroupExample3" autocomplete="off" onclick="jascript:change_state(this);"> Entre 25K et 90K
+            <label class="btn btn-secondary btn-sm">
+              <input type="radio" name="options" id="defaultGroupExample3" autocomplete="off" onchange="jascript:change_state(this);"> Entre 25K et 90K
             </label>
-            <label class="btn btn-secondary">
-              <input type="radio" name="options" id="defaultGroupExample4" autocomplete="off"> Plus de 90K
+            <label class="btn btn-secondary btn-sm">
+              <input type="radio" name="options" id="defaultGroupExample4" autocomplete="off" onchange="jascript:change_state(this);"> Plus de 90K
             </label>
           </div>
         </div>
 
-        <div class="control-group" id="doc1" hidden="true">
+        <div class="form-group control-group" id="doc1" hidden="true">
           <label class="control-label">Devis1:</label>
           <div class="controls">
             <input type="file" name="doc1">
           </div>
         </div>
 
-        <div class="control-group" id="doc2" hidden="true">
+        <div class="form-group control-group" id="doc2" hidden="true">
           <label class="control-label">Devis2:</label>
           <div class="controls">
             <input type="file" name="doc2">
           </div>
         </div>
 
-        <div class="control-group" id="doc3" hidden="true">
+        <div class="form-group control-group" id="doc3" hidden="true">
           <label class="control-label">Devis3:</label>
           <div class="controls">
             <input type="file" name="doc3">
           </div>
         </div>
 
-        <div class="control-group" id="doc4" hidden="true">
+        <div class="form-group control-group" id="doc4" hidden="true">
           <label class="control-label">RIB:</label>
           <div class="controls">
             <input type="file" name="doc4">
           </div>
         </div>
-
-        <div class="control-group" id="doc5" hidden="true">
+        <div class="form-group control-group col-md-3">
+          <div class="custom-file">
+            <input type="file" class="custom-file-input" id="inputGroupFile02">
+            <label class="custom-file-label" for="inputGroupFile02" aria-describedby="inputGroupFileAddon02">Choose file</label>
+          </div>
+          <div class="input-group-append">
+            <span class="input-group-text" id="inputGroupFileAddon02">Upload</span>
+          </div>
+        </div>
+        <div class="form-group control-group" id="doc5" hidden="true">
           <label class="control-label">PTF:</label>
           <div class="controls">
             <input type="file" name="doc5">
           </div>
         </div>
 
-        <div class="control-group" id="doc6" hidden="true">
+        <div class="form-group control-group" id="doc6" hidden="true">
           <label class="control-label">Publication:</label>
           <div class="controls">
             <input type="file" name="doc6">
           </div>
         </div>
-
-        <input type="hidden" name="form" id="login" value="offre">
-
-
-        <button type="submit" class="btn btn-primary">Valider</button>
+        <div class="form-group control-group col-md-3">
+          <button type="submit" class="btn btn-primary">Valider</button>
+        </div>
       </form>
     </div>
   </div>
-<% include footer %>
+  <% include footer %>
