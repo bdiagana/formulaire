@@ -13,42 +13,42 @@
 
       <div class="form-group col-md-3">
         <label for="nom">Nom :</label>
-        <input type="text" class="form-control" name="nom" id="nom" value="<%- nom %>">
+        <input type="text" class="form-control" name="nom" id="nom" value="<%= locals.nom %>">
       </div>
 
       <div class="form-group col-md-3">
         <label for="prenom">Prénom :</label>
-        <input type="text" class="form-control" name="prenom" id="prenom" value="<%- prenom %>">
+        <input type="text" class="form-control" name="prenom" id="prenom" value="<%= locals.prenom %>">
       </div>
 
       <div class="form-group col-md-3">
         <label for="societe">Société :</label>
-        <input type="text" class="form-control" name="societe" id="societe" value="<%- societe %>">
+        <input type="text" class="form-control" name="societe" id="societe" value="<%- locals.societe %>">
       </div>
 
       <div class="form-group col-md-3">
         <label for="adresse">Adresse postale :</label>
-        <input type="text" class="form-control" name="adresse" id="adresse" value="<%- adresse %>">
+        <input type="text" class="form-control" name="adresse" id="adresse" value="<%- locals.adresse %>">
       </div>
 
       <div class="form-group col-md-3">
         <label for="mail">Adresse mail :</label>
-        <input type="text" class="form-control" name="mail" id="mail" value="<%- mail %>">
+        <input type="text" class="form-control" name="mail" id="mail" value="<%- locals.mail %>">
       </div>
 
       <div class="form-group col-md-3">
         <label for="user">Nom d'utilisateur :</label>
-        <input type="text" class="form-control" name="user" id="user" value="<%- user %>">
+        <input type="text" class="form-control" name="user" id="user" value="<%- locals.user %>">
       </div>
 
       <div class="form-group col-md-3">
         <label for="pass">Mot de passe :</label>
-        <input type="password" class="form-control" name="pass" id="pass" value="<%- pass %>">
+        <input type="password" class="form-control" name="pass" id="pass" value="<%- locals.pass %>">
       </div>
 
       <div class="form-group col-md-3">
         <label for="passconf">Confirmation :</label>
-        <input type="password" class="form-control" name="passconf" id="passconf" value="<%- passconf %>">
+        <input type="password" class="form-control" name="passconf" id="passconf" value="<%- locals.passconf %>">
       </div>
 
       <button type="submit" class="btn btn-primary">Créer ce compte</button>
