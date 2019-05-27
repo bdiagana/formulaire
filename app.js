@@ -6,6 +6,13 @@ const express = require('express');
 const app = express();
 const conf = require('./load_conf');
 const _ = require('lodash');
+const mail = require('nodemailer').createTransport({
+	service: 'gmail',
+	auth: {
+		user: conf.mail.user,
+		pass: conf.mail.pass
+	}
+});
 
 
 //variable de session dms
@@ -115,55 +122,75 @@ function http_request(data, string_path,string_method,cb,orig_request_handle,ori
 function admin_connection(chunk,orig_request_handle,orig_response_handle,res){
 	if (res){
 		var success = JSON.parse(chunk)['success'];
-		if (success === "success") {
+		console.log(success + " dshfgsjdhfjé")
+		if (success) {
 			admin_session = res.headers['set-cookie'];
+
 			console.log('connection admin : ' + chunk)
-			return true;
+
+			console.log('ad : ' + admin_session);
+			// infos supplémentaires client concaténées dans les commentaire
+			var comment;
+
+			// teste  présence des champs pour la concaténation
+			if (orig_request_handle.body.societe) comment += orig_request_handle.body.societe + "\n";
+			if (orig_request_handle.body.addresse) comment += orig_request_handle.body.adresse + "\n";
+			if (orig_request_handle.body.telephonne) comment += orig_request_handle.body.telephone;
+
+			// informations création de compte
+			var account_informations = {
+				name: orig_request_handle.body.nom + " " + orig_request_handle.body.prenom,
+				user: orig_request_handle.body.user,
+				email: orig_request_handle.body.mail,
+				theme: 'bootstrap',
+				language: 'fr',
+				comment: comment
+			};
+
+			console.log('creation');
+
+			// requete création de compte
+			http_request(JSON.stringify(account_informations),'/users','POST',account_creation,orig_request_handle,orig_response_handle);
 		}
 		else {
 			console.log('erreur 500');
 			orig_response_handle.status(500).end();
+			return
 		}
 	}
 
-	// infos supplémentaires client concaténées dans les commentaire
-	var comment;
 
-	// teste  présence des champs pour la concaténation
-	if (orig_request_handle.body.societe) comment += orig_request_handle.body.societe + "\n";
-	if (orig_request_handle.body.addresse) comment += orig_request_handle.body.adresse + "\n";
-	if (orig_request_handle.body.telephonne) comment += orig_request_handle.body.telephone;
-
-	// informations création de compte
-	var account_informations = {
-			name: orig_request_handle.body.name,
-			email: orig_request_handle.body.mail,
-			theme: 'bootstrap',
-			language: 'fr',
-			comment: comment
-	};
-
-	console.log('creation');
-
-	// requete création de compte
-	http_request(JSON.stringify(account_informations),'/users','POST',account_creation,req,res);
 
 }
 
 // callback création de compte
 function account_creation(chunk,orig_request_handle,orig_response_handle,res){
-	if (JSON.parse(chunk).message === "success") {
+	if (JSON.parse(chunk).success) {
 		console.log('creation compte : \n' + chunk);
-		return true;
-	}
-	else return false;
 
-	if (is_account_created) res.render("./form_code", {mail: req.body.mail});
+		var mailOptions = {
+			from: 'ged@edu.itescia.fr',
+			to: orig_request_handle.body.mail,
+			subject: 'Sending Email using Node.js',
+			text: 'That was easy!'
+		};
+
+		mail.sendMail(mailOptions, function(error, info){
+			if (error) {
+				console.log(error);
+			} else {
+				console.log('Email sent: ' + info.response);
+			}
+		});
+
+		orig_response_handle.render("./form_code", {mail: orig_request_handle.body.mail});
+	}
 	else {
-		res.statusCode = 302 ;
-		res.setHeader("Location","/signup");
-		res.body = req.body;
-		res.end("");
+		orig_response_handle.statusCode = 302 ;
+		orig_response_handle.setHeader("Location","/signup");
+		orig_response_handle.body = orig_request_handle.body;
+		orig_response_handle.end("");
+		console.log('trise')
 	}
 }
 

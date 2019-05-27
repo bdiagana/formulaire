@@ -6,6 +6,8 @@
     "ejs": "^2.6.1",
     "express": "^4.17.0",
     "lodash": "^4.17.11",
+    "mail": "^0.2.3",
+    "nodemailer": "^6.2.1",
     "npm": "^6.9.0"
   },
   "devDependencies": {},
