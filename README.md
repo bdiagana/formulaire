@@ -19,4 +19,20 @@ Pas besoin de le relancer à chaque modification (utilisation de nodemon)
 
 **fichier de configuration de l'application**
 
-se trouve dans conf/node-app.conf
+dans conf/node-app.conf
+
+    ; fichier de configuration de l'application
+    
+    ;; concerne l'application elle meme
+    [app]  
+    port = 3000
+
+    ;; concerne la ged
+    [gedportal]
+    hostname = localhost 
+    port = 80
+
+    ;; compte administrateur de la ged
+    [geduser]
+    username = user
+    password = pass
