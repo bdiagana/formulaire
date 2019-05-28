@@ -2,6 +2,37 @@ $(document).ready(function () {
 
   $("#errordiv").delay(1000).slideUp();
 
+  $("#mailvalidator").hide();
+  $("#uservalidator").hide();
+
+  $('#user').keyup(() => {
+    if ($('#user').val() != "") check_user();
+    else $('#uservalidator').hide();
+  });
+  $('#user').focusin(() =>{
+    if ($('#user').val() != "") check_user();
+    else $('#uservalidator').hide();
+  });
+  $('#user').focusout(() =>{
+    if ($('#user').val() != "") check_user();
+    else $('#uservalidator').hide();
+  });
+
+  $('#mail').keyup(() => {
+    if ($('#mail').val() != "") check_mail();
+    else $('#mailvalidator').hide();
+  });
+  $('#mail').focusin(() =>{
+    if ($('#mail').val() != "") check_mail();
+    else $('#mailvalidator').hide();
+  });
+  $('#mail').focusout(() =>{
+    if ($('#mail').val() != "") check_mail();
+    else $('#mailvalidator').hide();
+  });
+
+
+
   $("input[type='radio']").on('change', function () {
     var selectedValue1 = $("input[id='defaultGroupExample1']:checked").val();
     var selectedValue2 = $("input[id='defaultGroupExample2']:checked").val();
@@ -56,3 +87,56 @@ $(document).ready(function () {
     }
   });
 });
+
+
+function check_mail(){
+  $("#mailvalidator").attr('class', "fas fa-spinner text-info loader");
+  $.ajax({
+    url: "/verify",
+    contentType: "application/json",
+    method: 'GET',
+    data: {
+      mail: $("#mail").val()
+    }
+  })
+  .done((data) => {
+    $("#mailvalidator").show();
+    if(data == "1"){
+      console.log("x");
+
+      $("#mailvalidator").attr('class', "fas fa-times-circle text-danger");
+    }else{
+      $("#mailvalidator").attr('class', "fas fa-check-circle text-success");
+    }
+
+  })
+  .fail((info) => {
+    console.log( "error" + JSON.stringify(info) );
+  });
+}
+
+function check_user(){
+  $("#uservalidator").attr('class', "fas fa-spinner text-info loader");
+  $.ajax({
+    url: "/verify",
+    contentType: "application/json",
+    method: 'GET',
+    data: {
+      user: $("#user").val()
+    }
+  })
+  .done((data) => {
+    $("#uservalidator").show();
+    if(data == "1"){
+      console.log("x");
+
+      $("#uservalidator").attr('class', "fas fa-times-circle text-danger");
+    }else{
+      $("#uservalidator").attr('class', "fas fa-check-circle text-success");
+    }
+
+  })
+  .fail((info) => {
+    console.log( "error" + JSON.stringify(info) );
+  });
+}

@@ -13,6 +13,14 @@ const mail = require('nodemailer').createTransport({
 		pass: conf.mail.pass
 	}
 });
+const mysql = require('mysql').createConnection({
+	host: conf.mysql.hostname,
+	user: conf.mysql.user,
+	password: conf.mysql.pass,
+	port: conf.mysql.port,
+	database: conf.mysql.db,
+	charset: 'utf8'
+});
 
 
 //variable de session dms
@@ -31,9 +39,41 @@ app.use(express.static(__dirname + '/public'));
 app.set('view engine', 'ejs')
 
 // get routes
+app.get('/',(req,res) => {
+	res.render('form_login')
+});
 app.get('/signin', (req, res) => res.render('form_login'));
 app.get('/signup', (req, res) => res.render('form_creation'));
 app.get('/postdocs', (req, res) => res.render('form_offre'));
+app.get('/verify', (req, res) => {
+
+	var query = "";
+	var variable = "";
+
+	if (req.query.mail){
+		query = 'SELECT * FROM tblUsers WHERE email = ?;';
+		variable = req.query.mail;
+	}
+	else if (req.query.user){
+		query = 'SELECT * FROM tblUsers WHERE login = ?;';
+		variable = req.query.user;
+	}
+
+	if (query && variable){
+		mysql.query(query , [variable],(error,results,fields) => {
+			if (error) throw error;
+			console.log(JSON.stringify(results));
+			if(results.length > 0){
+				res.codeStatus = 200;
+				res.send('1');
+			}
+			else {
+				res.codeStatus = 200;
+				res.send('0');
+			}
+		});
+	}
+});
 
 var arrays_to_upload = [
   { name: 'devis1', maxCount: 1 },
@@ -144,10 +184,10 @@ function admin_connection(chunk,orig_request_handle,orig_response_handle,res){
 
 			console.log('ad : ' + admin_session);
 			// infos supplémentaires client concaténées dans les commentaire
-			var comment;
+			var comment = "";
 
 			// teste  présence des champs pour la concaténation
-			if (orig_request_handle.body.societe) comment = orig_request_handle.body.societe + "\n";
+			if (orig_request_handle.body.societe) comment += orig_request_handle.body.societe + "\n";
 			if (orig_request_handle.body.addresse) comment += orig_request_handle.body.adresse + "\n";
 			if (orig_request_handle.body.telephonne) comment += orig_request_handle.body.telephone;
 
@@ -182,21 +222,6 @@ function account_creation(chunk,orig_request_handle,orig_response_handle,res){
 	if (JSON.parse(chunk).success) {
 		console.log('creation compte : \n' + chunk);
 
-		var mailOptions = {
-			from: 'ged@edu.itescia.fr',
-			to: orig_request_handle.body.mail,
-			subject: 'Sending Email using Node.js',
-			text: 'That was easy!'
-		};
-
-		mail.sendMail(mailOptions, function(error, info){
-			if (error) {
-				console.log(error);
-			} else {
-				console.log('Email sent: ' + info.response);
-			}
-		});
-
 		http_request('{"disable":"true"}',"/users/" + orig_request_handle.body.user + "/disable",'PUT',user_disabled,orig_request_handle,orig_response_handle);
 	}
 	else {
@@ -205,6 +230,7 @@ function account_creation(chunk,orig_request_handle,orig_response_handle,res){
 			prenom: orig_request_handle.body.prenom,
 			societe: orig_request_handle.body.societe,
 			adresse: orig_request_handle.body.adresse,
+			telephone: orig_request_handle.body.telephone,
 			mail: orig_request_handle.body.mail,
 			user: orig_request_handle.body.user,
 			pass: orig_request_handle.body.pass,
@@ -243,9 +269,32 @@ function user_connected(chunk,orig_request_handle,orig_response_handle,res){
 }
 
 function user_disabled(chunk,orig_request_handle,orig_response_handle,res){
+	var success = JSON.parse(chunk).success;
 	if (res){
-		var success = JSON.parse(chunk)['success'];
 		if(success){
+
+			var code_verif = require('hat')();
+
+			mysql.query('INSERT INTO verif_mail (`mail`,`code`,`verified`) VALUES (?,?,?);',[orig_request_handle.body.mail,code_verif,false],(error,results,fields)=>{
+				if (error) throw error;
+				console.log("Insrtion reussie")
+			});
+
+			var mailOptions = {
+				from: 'ged@edu.itescia.fr',
+				to: orig_request_handle.body.mail,
+				subject: 'Sending Email using Node.js',
+				text: 'That was easy! ' + code_verif
+			};
+
+			mail.sendMail(mailOptions, function(error, info){
+				if (error) {
+					console.log(error);
+				} else {
+					console.log('Email sent: ' + info.response);
+				}
+			});
+
 			orig_response_handle.render("./form_code", {mail: orig_request_handle.body.mail});
 		}
 		else {
