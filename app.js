@@ -40,7 +40,7 @@ app.set('view engine', 'ejs')
 
 // get routes
 app.get('/',(req,res) => {
-	res.render('form_login')
+	res.render('form_code')
 });
 app.get('/signin', (req, res) => res.render('form_login'));
 app.get('/signup', (req, res) => res.render('form_creation'));
@@ -52,17 +52,16 @@ app.get('/verify', (req, res) => {
 
 	if (req.query.mail){
 		query = 'SELECT * FROM tblUsers WHERE email = ?;';
-		variable = req.query.mail;
+		variable = [req.query.mail];
 	}
 	else if (req.query.user){
 		query = 'SELECT * FROM tblUsers WHERE login = ?;';
-		variable = req.query.user;
+		variable = [req.query.user];
 	}
 
 	if (query && variable){
-		mysql.query(query , [variable],(error,results,fields) => {
+		mysql.query(query , variable,(error,results,fields) => {
 			if (error) throw error;
-			console.log(JSON.stringify(results));
 			if(results.length > 0){
 				res.codeStatus = 200;
 				res.send('1');
@@ -74,157 +73,261 @@ app.get('/verify', (req, res) => {
 		});
 	}
 });
+app.post('/verify_mail',(req,res)=>{
+	//require('./response').verify_mail(req,res);
+	console.log("verif_mail");
+	query = 'SELECT * FROM verif_mail WHERE mail = ? AND code = ? LIMIT 1;';
+	mysql.query(query,[req.body.mail,req.body.code],(error,results,fields)=> {
+	  if (error) throw error;
+	  console.log("verif_mail ok ? : " + JSON.stringify(results['id']));
+	  if(results.length > 0){
+	    update_result(results,req,res);
+	  }
+	  else {
+	    res.render('form_code', {mail: req.body.mail});
+	  }
 
-var arrays_to_upload = [
-  { name: 'devis1', maxCount: 1 },
-	{ name: 'devis2', maxCount: 1 },
-	{ name: 'devis3', maxCount: 1 },
-	{ name: 'rib', maxCount: 1 },
-	{ name: 'ptf', maxCount: 1 },
-	{ name: 'publication', maxCount: 1 }
-]
-
-// post routes
-app.post('/process',upload.fields(arrays_to_upload, 12), (req, res) => {
-	console.log('process : ' + JSON.stringify(req.files))
-
-	switch(req.body['form']){
-		case "signin":
-
-		http_request('{"user":"' + req.body.user + '","pass":"' + req.body.pass + '"}',"/login","POST",user_connected,req,res);
-
-		break;
-		case "signup":
-
-		//connection administrateur
-		http_request('{"user":"' + conf.geduser.username + '","pass":"' + conf.geduser.password + '"}',"/login","POST",admin_connection,req,res);
-
-		break;
-		case "offre":
-
-		console.log('offre ' +JSON.stringify(req.files))
-		res.statusCode = 200;
-		res.end(JSON.stringify(req.body));
-		break;
-		case 'verify':
-		res.render('form_offre');
-		break;
-
-	}
+	});
 });
 
-// démarrage du serveur
-app.listen(conf.app.port, () => console.log(`Example app listening on port ${conf.app.port}!`));
+	var arrays_to_upload = [
+		{ name: 'devis1', maxCount: 1 },
+		{ name: 'devis2', maxCount: 1 },
+		{ name: 'devis3', maxCount: 1 },
+		{ name: 'rib', maxCount: 1 },
+		{ name: 'ptf', maxCount: 1 },
+		{ name: 'publication', maxCount: 1 }
+	]
 
-// callback détail compte. @deprecated
-function account(chunk){
-	console.log(chunk);
-	mydms_session=null;
-	http_request("{}","/logout","GET",disconnect);
-}
+	// post routes
+	app.post('/process',upload.fields(arrays_to_upload, 12), (req, res) => {
+		console.log('process : ' + JSON.stringify(req.files))
 
+		switch(req.body['form']){
+			case "signin":
 
+			http_request('{"user":"' + req.body.user + '","pass":"' + req.body.pass + '"}',"/login","POST",user_connected,req,res);
 
-// automatise les requetes
-// data : json à envoyer
-// string_path : chemin de l'API sur lequel requeter
-// string_method : méthode à utiliser GET,POST,PUT,DELETE
-// cb : fonction de callback
-// response_handle : handle de reponse pour l'utilisateur
-function http_request(data, string_path,string_method,cb,orig_request_handle,orig_response_handle) {
+			break;
+			case "signup":
 
-	// An object of options to indicate where to post to
-	var post_options = {
-		host: conf.gedportal.hostname,
-		port: conf.gedportal.port,
-		path: '/restapi/index.php'+string_path,
-		method: string_method,
-		headers: {
-			'Content-Type': 'application/json',
-			'Content-Length': Buffer.byteLength(data)
+			//connection administrateur
+			http_request('{"user":"' + conf.geduser.username + '","pass":"' + conf.geduser.password + '"}',"/login","POST",admin_connection,req,res);
+
+			break;
+			case "offre":
+
+			console.log('offre ' +JSON.stringify(req.files))
+			res.statusCode = 200;
+			res.end(JSON.stringify(req.body));
+			break;
+			case 'verify':
+			res.render('form_offre');
+			break;
+
 		}
-	};
-	// si session mydms : ajout du header cookie dans la requete
-	if (admin_session && admin_session != ""){
-		post_options.headers["Cookie"] = admin_session;
-		console.log('admin cookie sent');
-	}
-
-	// Set up the request
-	var post_req = http.request(post_options, function(res) {
-		res.setEncoding('utf8');
-		res.on('data', function (chunk) {
-			if (cb) {
-				if (orig_response_handle) return cb(chunk,orig_request_handle,orig_response_handle,res);
-				else return cb(chunk);
-			}
-			else {
-				console.log('request without callback')
-				return false;
-			}
-		});
 	});
 
-	// post the data
-	post_req.write(data);
-	post_req.end();
-}
+	// démarrage du serveur
+	app.listen(conf.app.port, () => console.log(`Example app listening on port ${conf.app.port}!`));
 
-// CALLBACKS : code à mettre dans un module
+	// callback détail compte. @deprecated
+	function account(chunk){
+		console.log(chunk);
+		mydms_session=null;
+		http_request("{}","/logout","GET",disconnect);
+	}
 
-// callback connection administrateur
-function admin_connection(chunk,orig_request_handle,orig_response_handle,res){
-	if (res){
-		var success = JSON.parse(chunk)['success'];
-		console.log(success + " dshfgsjdhfjé")
-		if (success) {
-			admin_session = res.headers['set-cookie'];
 
-			console.log('connection admin : ' + chunk)
 
-			console.log('ad : ' + admin_session);
-			// infos supplémentaires client concaténées dans les commentaire
-			var comment = "";
+	// automatise les requetes
+	// data : json à envoyer
+	// string_path : chemin de l'API sur lequel requeter
+	// string_method : méthode à utiliser GET,POST,PUT,DELETE
+	// cb : fonction de callback
+	// response_handle : handle de reponse pour l'utilisateur
+	function http_request(data, string_path,string_method,cb,orig_request_handle,orig_response_handle) {
 
-			// teste  présence des champs pour la concaténation
-			if (orig_request_handle.body.societe) comment += orig_request_handle.body.societe + "\n";
-			if (orig_request_handle.body.addresse) comment += orig_request_handle.body.adresse + "\n";
-			if (orig_request_handle.body.telephonne) comment += orig_request_handle.body.telephone;
+		// An object of options to indicate where to post to
+		var post_options = {
+			host: conf.gedportal.hostname,
+			port: conf.gedportal.port,
+			path: '/restapi/index.php'+string_path,
+			method: string_method,
+			headers: {
+				'Content-Type': 'application/json',
+				'Content-Length': Buffer.byteLength(data)
+			}
+		};
+		// si session mydms : ajout du header cookie dans la requete
+		if (admin_session && admin_session != ""){
+			post_options.headers["Cookie"] = admin_session;
+			console.log('admin cookie sent');
+		}
 
-			// informations création de compte
-			var account_informations = {
-				name: orig_request_handle.body.nom + " " + orig_request_handle.body.prenom,
-				user: orig_request_handle.body.user,
-				email: orig_request_handle.body.mail,
-				theme: 'bootstrap',
-				language: 'fr',
-				comment: comment
-			};
+		// Set up the request
+		var post_req = http.request(post_options, function(res) {
+			res.setEncoding('utf8');
+			res.on('data', function (chunk) {
+				if (cb) {
+					if (orig_response_handle) return cb(chunk,orig_request_handle,orig_response_handle,res);
+					else return cb(chunk);
+				}
+				else {
+					console.log('request without callback')
+					return false;
+				}
+			});
+		});
 
-			console.log('creation');
+		// post the data
+		post_req.write(data);
+		post_req.end();
+	}
 
-			// requete création de compte
-			http_request(JSON.stringify(account_informations),'/users','POST',account_creation,orig_request_handle,orig_response_handle);
+	// CALLBACKS : code à mettre dans un module
+
+	// callback connection administrateur
+	function admin_connection(chunk,orig_request_handle,orig_response_handle,res){
+		if (res){
+			var success = JSON.parse(chunk)['success'];
+			console.log(success + " dshfgsjdhfjé")
+			if (success) {
+				admin_session = res.headers['set-cookie'];
+
+				console.log('connection admin : ' + chunk)
+
+				console.log('ad : ' + admin_session);
+				// infos supplémentaires client concaténées dans les commentaire
+				var comment = "";
+
+				// teste  présence des champs pour la concaténation
+				if (orig_request_handle.body.societe) comment += orig_request_handle.body.societe + "\n";
+				if (orig_request_handle.body.addresse) comment += orig_request_handle.body.adresse + "\n";
+				if (orig_request_handle.body.telephonne) comment += orig_request_handle.body.telephone;
+
+				// informations création de compte
+				var account_informations = {
+					name: orig_request_handle.body.nom + " " + orig_request_handle.body.prenom,
+					user: orig_request_handle.body.user,
+					email: orig_request_handle.body.mail,
+					theme: 'bootstrap',
+					language: 'fr',
+					comment: comment
+				};
+
+				console.log('creation');
+
+				// requete création de compte
+				http_request(JSON.stringify(account_informations),'/users','POST',account_creation,orig_request_handle,orig_response_handle);
+			}
+			else {
+				console.log('erreur 500');
+				orig_response_handle.status(500).end();
+				return
+			}
+		}
+
+
+
+	}
+
+	// callback création de compte
+	function account_creation(chunk,orig_request_handle,orig_response_handle,res){
+		if (JSON.parse(chunk).success) {
+			console.log('creation compte : \n' + chunk);
+
+			http_request('{"disable":"true"}',"/users/" + orig_request_handle.body.user + "/disable",'PUT',user_disabled,orig_request_handle,orig_response_handle);
 		}
 		else {
-			console.log('erreur 500');
-			orig_response_handle.status(500).end();
-			return
+			resign_up(orig_request_handle,orig_response_handle);
 		}
 	}
 
-
-
-}
-
-// callback création de compte
-function account_creation(chunk,orig_request_handle,orig_response_handle,res){
-	if (JSON.parse(chunk).success) {
-		console.log('creation compte : \n' + chunk);
-
-		http_request('{"disable":"true"}',"/users/" + orig_request_handle.body.user + "/disable",'PUT',user_disabled,orig_request_handle,orig_response_handle);
+	//callback connection
+	function user_connected(chunk,orig_request_handle,orig_response_handle,res){
+		if (res.headers){
+			var cookie = res.headers['set-cookie'];
+			if (orig_response_handle){
+				if (cookie){
+					orig_response_handle.setHeader("set-cookie",cookie);
+					orig_response_handle.statusCode = 302 ;
+					orig_response_handle.setHeader("Location","/postdocs");
+					orig_response_handle.end("");
+				}
+				else {
+					orig_response_handle.statusCode = 302;
+					orig_response_handle.setHeader("Location","/signin");
+					orig_response_handle.end("");
+				}
+			}
+		}
+		else {
+			response_handle.statusCode = 302;
+			response_handle.setHeader("Location","/signin");
+			response_handle.end("");
+		}
 	}
-	else {
+
+	function user_disabled(chunk,orig_request_handle,orig_response_handle,res){
+		var success = JSON.parse(chunk).success;
+		if (res){
+			if(success){
+
+				var code_verif = require('hat')();
+
+				mysql.query('INSERT INTO verif_mail (`id`,`mail`,`code`,`verified`) VALUES (?,?,?,?);',[orig_request_handle.body.user,orig_request_handle.body.mail,code_verif,false],(error,results,fields)=>{
+					if (error) throw error;
+					console.log("Insrtion reussie")
+				});
+
+				var mailOptions = {
+					from: 'ged@edu.itescia.fr',
+					to: orig_request_handle.body.mail,
+					subject: 'Sending Email using Node.js',
+					text: 'That was easy! ' + code_verif
+				};
+
+				mail.sendMail(mailOptions, function(error, info){
+					if (error) {
+						console.log(error);
+					} else {
+						console.log('Email sent: ' + info.response);
+					}
+				});
+
+				orig_response_handle.render("./form_code", {mail: orig_request_handle.body.mail});
+			}
+			else {
+				console.log('user not disabled')
+			}
+		}
+	}
+
+	function disconnect(chunk){
+		console.log('admin disconnected : ' + chunk);
+	}
+
+	function update_result(results,req,res){
+		var user = results.id;
+		console.log(user + " activated with : " + req.body.code);
+		mysql.query('UPDATE verif_mail SET verified = true WHERE code = ?;', [req.body.code],(error,results,fields)=> {
+			if (error) throw error;
+			console.log(JSON.stringify(results));
+			http_request("{disable: false}","/users/"+user+"/disable",'PUT',user_reactivated,req,res);
+		});
+	}
+
+	function user_reactivated(chunk,orig_request_handle,orig_response_handle){
+		if (JSON.parse(chunk).success){
+			orig_response_handle.render("/signin");
+		}
+		else {
+			resign_up(orig_request_handle,orig_response_handle)
+		}
+	}
+
+	function resign_up(orig_request_handle,orig_response_handle){
 		var infos_back = {
 			nom: orig_request_handle.body.nom,
 			prenom: orig_request_handle.body.prenom,
@@ -239,70 +342,5 @@ function account_creation(chunk,orig_request_handle,orig_response_handle,res){
 		};
 
 		orig_response_handle.render("form_creation", infos_back);
-		console.log('trise')
+		console.log('triste')
 	}
-}
-
-//callback connection
-function user_connected(chunk,orig_request_handle,orig_response_handle,res){
-	if (res.headers){
-		var cookie = res.headers['set-cookie'];
-		if (orig_response_handle){
-			if (cookie){
-				orig_response_handle.setHeader("set-cookie",cookie);
-				orig_response_handle.statusCode = 302 ;
-				orig_response_handle.setHeader("Location","/postdocs");
-				orig_response_handle.end("");
-			}
-			else {
-				orig_response_handle.statusCode = 302;
-				orig_response_handle.setHeader("Location","/signin");
-				orig_response_handle.end("");
-			}
-		}
-	}
-	else {
-		response_handle.statusCode = 302;
-		response_handle.setHeader("Location","/signin");
-		response_handle.end("");
-	}
-}
-
-function user_disabled(chunk,orig_request_handle,orig_response_handle,res){
-	var success = JSON.parse(chunk).success;
-	if (res){
-		if(success){
-
-			var code_verif = require('hat')();
-
-			mysql.query('INSERT INTO verif_mail (`mail`,`code`,`verified`) VALUES (?,?,?);',[orig_request_handle.body.mail,code_verif,false],(error,results,fields)=>{
-				if (error) throw error;
-				console.log("Insrtion reussie")
-			});
-
-			var mailOptions = {
-				from: 'ged@edu.itescia.fr',
-				to: orig_request_handle.body.mail,
-				subject: 'Sending Email using Node.js',
-				text: 'That was easy! ' + code_verif
-			};
-
-			mail.sendMail(mailOptions, function(error, info){
-				if (error) {
-					console.log(error);
-				} else {
-					console.log('Email sent: ' + info.response);
-				}
-			});
-
-			orig_response_handle.render("./form_code", {mail: orig_request_handle.body.mail});
-		}
-		else {
-			console.log('user not disabled')
-		}
-	}
-}
-
-function disconnect(chunk){
-	console.log('admin disconnected : ' + chunk);
-}

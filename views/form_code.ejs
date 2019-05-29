@@ -2,11 +2,11 @@
 <div class="container-fluid">
   <div class="row-fluid">
     <legend>Code de vérification</legend>
-    <form action="/process" method="post">
+    <form action="/verify_mail" method="post">
 
-      <input type="hidden" name="form" value="verify">
+      <input type="hidden" name="mail" value="<%- locals.mail %>">
 
-      <p> Vous avez reçu un mail à l'adresse <%- mail %> celui-ci contient un code de vérification.</p>
+      <p> Vous avez reçu un mail à l'adresse <%- locals.mail %> celui-ci contient un code de vérification.</p>
 
       <div class="form-group col-md-3">
         <label for="code">Code :</label>
