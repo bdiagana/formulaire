@@ -15,5 +15,17 @@
 	</head>
 <body class="login">
 	<div class="navbar navbar-dark bg-dark">
-    <a class="navbar-brand" href="/">GEDi</a>
+		<a class="navbar-brand" href="/">
+	 <img src="https://getbootstrap.com/docs/4.3/assets/brand/bootstrap-solid.svg" width="30" height="30" class="d-inline-block align-top" alt="">
+	 EDi
+ 	</a>
+	<% if (locals.user){ %>
+		<a href="/disconnect">
+	<span class="navbar-text">
+		<%- user %>
+		&nbsp;
+      <i class="h4 fas fa-power-off"></i>
+    </span>
+		</a>
+		<% }%>
   </div>

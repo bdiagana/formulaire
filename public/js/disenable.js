@@ -1,6 +1,7 @@
 $(document).ready(function () {
 
   $("#errordiv").delay(1000).slideUp();
+  $("#successdiv").delay(1000).slideUp();
 
   $("#mailvalidator").hide();
   $("#uservalidator").hide();
@@ -17,6 +18,10 @@ $(document).ready(function () {
     if ($('#user').val() != "") check_user();
     else $('#uservalidator').hide();
   });
+  $('#user').ready(() =>{
+    if ($('#user').val() != "") check_user();
+    else $('#uservalidator').hide();
+  });
 
   $('#mail').keyup(() => {
     if ($('#mail').val() != "") check_mail();
@@ -27,6 +32,10 @@ $(document).ready(function () {
     else $('#mailvalidator').hide();
   });
   $('#mail').focusout(() =>{
+    if ($('#mail').val() != "") check_mail();
+    else $('#mailvalidator').hide();
+  });
+  $('#mail').ready(() =>{
     if ($('#mail').val() != "") check_mail();
     else $('#mailvalidator').hide();
   });
@@ -90,6 +99,16 @@ $(document).ready(function () {
 
 
 function check_mail(){
+  var emailRegex = new RegExp('^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$');
+  var str = $('#mail').val();
+  var test = str.match(emailRegex);
+  console.log(test);
+
+  if (test === false) {
+    $("#mailvalidator").attr('class', "fas fa-times-circle text-danger");
+    return;
+  }
+
   $("#mailvalidator").attr('class', "fas fa-spinner text-info loader");
   $.ajax({
     url: "/verify",
@@ -102,7 +121,6 @@ function check_mail(){
   .done((data) => {
     $("#mailvalidator").show();
     if(data == "1"){
-      console.log("x");
 
       $("#mailvalidator").attr('class', "fas fa-times-circle text-danger");
     }else{
