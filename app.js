@@ -22,8 +22,6 @@ const mysql = require('mysql').createConnection({
 	charset: 'utf8'
 });
 const session = require('express-session');
-const mmm = require('mmmagic'),
-	Magic = mmm.Magic;
 
 
 //variable de session dms
@@ -38,10 +36,10 @@ app.use(express.urlencoded());
 app.use(express.json());
 app.use(express.static(__dirname + '/public'));
 app.use(session({
-  secret: 'apigeditwothousandnineteen',
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false }
+	secret: 'apigeditwothousandnineteen',
+	resave: false,
+	saveUninitialized: true,
+	cookie: { secure: false }
 }))
 
 // paramétrage moteur de template
@@ -50,17 +48,18 @@ app.set('view engine', 'ejs')
 // get routes
 app.get('/',(req,res) => {
 	res.redirect('/signin');
-
 });
+
 app.get('/disconnect',(req,res)=>{
 	if (req.session.dms_session) {
 		req.session.dms_session = undefined
 		req.session.success = "Déconnecté !"
 	}
-	res.redirect("signin");
+	res.redirect("/signin");
 });
+
 app.get('/signin', (req, res) => {
-	if (req.session.dms_session) res.redirect("/postdocs");
+	if (req.session.dms_session) res.redirect("/offre");
 	else {
 		if (req.session.success !== undefined) {
 			res.locals.success = req.session.success;
@@ -73,18 +72,24 @@ app.get('/signin', (req, res) => {
 		res.render('form_login');
 	}
 });
+
 app.get('/signup', (req, res) => {
-	if (req.session.dms_session) res.redirect("/postdocs");
+	if (req.session.dms_session) res.redirect("/offre");
 	else res.render('form_creation')
 });
-app.get('/postdocs', (req, res) => {
-	if (req.session.user) res.locals.user = req.session.user;
-	if (req.session.dms_session) res.render('form_offre');
+
+app.get('/offre', (req, res) => {
+
+	if (req.session.dms_session) {
+		if (req.session.user) res.locals.user = req.session.user;
+		res.render('form_offre0');
+	}
 	else {
 		req.session.error = "Veuillez vous connecter";
 		res.redirect("/signin");
 	}
 });
+
 app.get('/verify', (req, res) => {
 
 	var query = "";
@@ -113,7 +118,8 @@ app.get('/verify', (req, res) => {
 		});
 	}
 });
-app.post('/verify_mail',(req,res)=>{
+
+app.post('/code',(req,res)=>{
 	//require('./response').verify_mail(req,res);
 	console.log("verif_mail");
 	query = 'SELECT * FROM verif_mail WHERE mail = ? AND code = ? LIMIT 1;';
@@ -128,21 +134,48 @@ app.post('/verify_mail',(req,res)=>{
 	});
 });
 
-var arrays_to_upload = [
-	{ name: 'devis1', maxCount: 1 },
-	{ name: 'devis2', maxCount: 1 },
-	{ name: 'devis3', maxCount: 1 },
-	{ name: 'rib', maxCount: 1 },
-	{ name: 'ptf', maxCount: 1 },
-	{ name: 'publication', maxCount: 1 }
-];
+app.post('/signin',(req,res)=>{
+	http_request('{"user":"' + req.body.user + '","pass":"' + req.body.pass + '"}',"/login","POST",user_connected,req,res);
+})
+
+app.post('/signup',(res,req)=>{
+	//connection administrateur
+	http_request('{"user":"' + conf.geduser.username + '","pass":"' + conf.geduser.password + '"}',"/login","POST",admin_connection,req,res);
+})
+
+app.post('/offre',upload.array('docs',12), (req,res) => {
+
+	if (req.session.dms_session === undefined) {
+		req.session.error = "Veuillez vous connecter";
+		res.redirect("/signin");
+		return
+	}
+
+	console.log(req.session.user)
+
+	var query = "SELECT homefolder FROM tblUsers WHERE login = '?'";
+
+	mysql.query(query, [req.session.user], (error,results,fields)=>{
+		if (error) throw error;
+	});
+
+	console.log('offre ' +req.files)
+	res.statusCode = 200;
+	res.end(JSON.stringify(req.body));
+})
 
 // post routes
-app.post('/process',upload.fields(arrays_to_upload, 12), (req, res) => {
+app.post('/process',upload.array('docs', 12), (req, res) => {
+
+	if (req.session.dms_session === undefined) {
+		req.session.error = "Veuillez vous connecter";
+		res.redirect("/signin");
+		return
+	}
 
 	switch(req.body['form']){
 		case "signin":
-		console.log(req.session);
+
 		http_request('{"user":"' + req.body.user + '","pass":"' + req.body.pass + '"}',"/login","POST",user_connected,req,res);
 
 		break;
@@ -154,14 +187,21 @@ app.post('/process',upload.fields(arrays_to_upload, 12), (req, res) => {
 		break;
 		case "offre":
 
+		console.log(req.session)
+
+		mysql.query("SELECT homefolder FROM tblUsers WHERE login = ?", [req.session.user], (error,results,fields)=>{
+			if (error) throw error;
+			console.log(results[0].homefolder);
 
 
-		console.log('offre ' +JSON.stringify(req.files))
+		});
+
+		console.log('offre ' +req.files)
 		res.statusCode = 200;
 		res.end(JSON.stringify(req.body));
 		break;
 		case 'verify':
-		res.render('form_offre');
+		res.render('form_offre0');
 		break;
 
 	}
@@ -184,8 +224,17 @@ function account(chunk){
 // string_path : chemin de l'API sur lequel requeter
 // string_method : méthode à utiliser GET,POST,PUT,DELETE
 // cb : fonction de callback
-// response_handle : handle de reponse pour l'utilisateur
-function http_request(data, string_path,string_method,cb,orig_request_handle,orig_response_handle) {
+// orig_request_handle : handle de request utilisateur
+// orig_response_handle : handle de response utilisateur
+// dms_session : session dms utilisateur (overwrite cookie session)
+function http_request(data, string_path,string_method,cb,orig_request_handle,orig_response_handle, dms_session) {
+
+	// if (typeof data === 'string' || data instanceof String){
+	// 	var content_type = "application/json";
+	// }
+	// else {
+	// 	var content_type =
+	// }
 
 	// An object of options to indicate where to post to
 	var post_options = {
@@ -198,10 +247,18 @@ function http_request(data, string_path,string_method,cb,orig_request_handle,ori
 			'Content-Length': Buffer.byteLength(data)
 		}
 	};
-	// si session mydms : ajout du header cookie dans la requete
-	if (admin_session && admin_session != ""){
+	// si dms_session sinon si admin_session sinon rien
+	if (dms_session && dms_session != ""){
+		post_options.headers["Cookie"] = dms_session;
+		console.log('user cookie sent');
+
+	}
+	else if (admin_session && admin_session != ""){
 		post_options.headers["Cookie"] = admin_session;
 		console.log('admin cookie sent');
+	}
+	else {
+		console.log('no cookie sent');
 	}
 
 	// Set up the request
@@ -237,10 +294,10 @@ function admin_connection(chunk,orig_request_handle,orig_response_handle,res){
 
 			console.log('ad : ' + admin_session);
 			// infos supplémentaires client concaténées dans les commentaire
-		//	var comment = `${orig_request_handle.body.societe}
-		//	${orig_request_handle.body.adresse}
-		//	${orig_request_handle.body.atelephone}`;
-		var comment;
+			//	var comment = `${orig_request_handle.body.societe}
+			//	${orig_request_handle.body.adresse}
+			//	${orig_request_handle.body.atelephone}`;
+			var comment = "";
 
 			// teste  présence des champs pour la concaténation
 			if (orig_request_handle.body.societe) comment += orig_request_handle.body.societe + "\n";
@@ -292,7 +349,7 @@ function user_connected(chunk,orig_request_handle,orig_response_handle,res){
 		orig_request_handle.session.dms_session = res.headers['set-cookie'];
 		orig_request_handle.session.user = orig_request_handle.body.user;
 		console.log(orig_request_handle.session.dms_session);
-		orig_response_handle.redirect("/postdocs");
+		orig_response_handle.redirect("/offre");
 	}
 	else {
 		var infos_back = {
@@ -302,27 +359,6 @@ function user_connected(chunk,orig_request_handle,orig_response_handle,res){
 		};
 		orig_response_handle.render("form_login", infos_back);
 	}
-	// if (res.headers){
-	// 	var cookie = res.headers['set-cookie'];
-	// 	if (orig_response_handle){
-	// 		if (cookie){
-	// 			orig_response_handle.setHeader("set-cookie",cookie);
-	// 			orig_response_handle.statusCode = 302 ;
-	// 			orig_response_handle.setHeader("Location","/postdocs");
-	// 			orig_response_handle.end("");
-	// 		}
-	// 		else {
-	// 			orig_response_handle.statusCode = 302;
-	// 			orig_response_handle.setHeader("Location","/signin");
-	// 			orig_response_handle.end("");
-	// 		}
-	// 	}
-	// }
-	// else {
-	// 	response_handle.statusCode = 302;
-	// 	response_handle.setHeader("Location","/signin");
-	// 	response_handle.end("");
-	// }
 }
 
 function user_disabled(chunk,orig_request_handle,orig_response_handle,res){
@@ -415,12 +451,22 @@ function folder_created(chunk,orig_request_handle,orig_response_handle,res){
 function folder_access_granted(chunk,orig_request_handle,orig_response_handle,res){
 	console.log(chunk)
 	if (JSON.parse(chunk).success){
-		console.log("account created successfully")
-		orig_response_handle.redirect("/signin");
+		var user = JSON.parse(chunk).message;
+		mysql.query("SELECT id FROM tblUsers WHERE login = ?", [user],(error,results,fields)=>{
+			if (error) throw error;
+			var id = results[0].id;
+			mysql.query("UPDATE tblFolders SET owner = ? WHERE name = ?",[id,user],(error,results,fields)=>{
+				if (error) throw error;
+				console.log("account created successfully")
+				orig_response_handle.redirect("/signin");
+			});
+		});
+
+
 	}
 	else {
 		console.log("failed access grant : " + chunk);
-		 resign_up(orig_request_handle,orig_response_handle);
+		resign_up(orig_request_handle,orig_response_handle);
 	}
 }
 
