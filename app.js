@@ -25,9 +25,10 @@ const session = require('express-session');
 
 
 //variable de session dms
-var mydms_session;
-var mydms_cookie;
 var admin_session;
+
+// used to queue files to upload
+var files_to_upload;
 
 var upload = multer({ dest: 'uploads/' })
 
@@ -138,7 +139,7 @@ app.post('/signin',(req,res)=>{
 	http_request('{"user":"' + req.body.user + '","pass":"' + req.body.pass + '"}',"/login","POST",user_connected,req,res);
 })
 
-app.post('/signup',(res,req)=>{
+app.post('/signup',(req,res)=>{
 	//connection administrateur
 	http_request('{"user":"' + conf.geduser.username + '","pass":"' + conf.geduser.password + '"}',"/login","POST",admin_connection,req,res);
 })
@@ -151,15 +152,49 @@ app.post('/offre',upload.array('docs',12), (req,res) => {
 		return
 	}
 
-	console.log(req.session.user)
+	// if (req.files === undefined || req.files === []) {
+	// 	req.session.error = "Aucun fichier envoyés";
+	// 	res.redirect("/offre");
+	// }
 
-	var query = "SELECT homefolder FROM tblUsers WHERE login = '?'";
+	console.log(JSON.stringify(req.files));
 
-	mysql.query(query, [req.session.user], (error,results,fields)=>{
+	files_to_upload = req.files;
+
+	var query_folder = "SELECT homefolder FROM tblUsers WHERE login = ?";
+
+	mysql.query(query_folder, [req.session.user], (error,results,fields)=>{
 		if (error) throw error;
+		var folder = results[0].homefolder;
+		console.log("folder : " + folder);
+
+		var query_test_folder = "SELECT id,parent FROM tblFolders WHERE name = ?";
+
+		var annee = req.body.annee;
+
+		mysql.query(query_test_folder,[annee],(error,results2,fields)=>{
+			if (error) throw error;
+
+			if (results2[0] === undefined || results2[0].parent != folder){
+				console.log("creation du dossier année : " + annee + " pour l'utilisateur : " + req.session.user);
+				var data = {
+					name: annee
+				};
+
+				http_request(JSON.stringify(data),"/folder/"+folder+"/createfolder","POST",offre_folder_created,req,res,req.session.dms_session);
+			}
+			else {
+				console.log("dossier année : " + annee + " déjà présent pour l'utilisateur : " + req.session.user);
+				var id_folder = results2[0].id;
+				var data = files_to_upload.shift();
+				console.log("data to send :" + JSON.stringify(data))
+				var dms_session = req.session.dms_session;
+				http_request(data,"/folder/"+id_folder+"/document","PUT",document_uploaded,req,res,dms_session);
+			}
+		});
+
 	});
 
-	console.log('offre ' +req.files)
 	res.statusCode = 200;
 	res.end(JSON.stringify(req.body));
 })
@@ -226,32 +261,44 @@ function account(chunk){
 // cb : fonction de callback
 // orig_request_handle : handle de request utilisateur
 // orig_response_handle : handle de response utilisateur
-// dms_session : session dms utilisateur (overwrite cookie session)
+// dms_session : session dms utilisateur (overwrite admin session)
 function http_request(data, string_path,string_method,cb,orig_request_handle,orig_response_handle, dms_session) {
 
-	// if (typeof data === 'string' || data instanceof String){
-	// 	var content_type = "application/json";
-	// }
-	// else {
-	// 	var content_type =
-	// }
+	var content = "";
+	var array_files;
+	var extended = "";
+
+	if (typeof data === 'string' || data instanceof String){
+		var content_type = "application/json";
+		content = data;
+	}
+	else {
+		var file = data;
+		var content = fs.readFileSync(file.path);
+		var content_type = file.mimetype;
+		extended = "?name=test&origfilename="+escape(file.originalname)+"";
+	}
+
+	var path_prefix = '/restapi/index.php' + string_path;
+
+	var path = (extended != "" ? path_prefix + extended : path_prefix);
 
 	// An object of options to indicate where to post to
 	var post_options = {
 		host: conf.gedportal.hostname,
 		port: conf.gedportal.port,
-		path: '/restapi/index.php'+string_path,
+		path: path,
 		method: string_method,
 		headers: {
-			'Content-Type': 'application/json',
-			'Content-Length': Buffer.byteLength(data)
+			'Content-Type': content_type,
+			'Content-Length': Buffer.byteLength(content)
 		}
 	};
+
 	// si dms_session sinon si admin_session sinon rien
 	if (dms_session && dms_session != ""){
 		post_options.headers["Cookie"] = dms_session;
 		console.log('user cookie sent');
-
 	}
 	else if (admin_session && admin_session != ""){
 		post_options.headers["Cookie"] = admin_session;
@@ -266,8 +313,15 @@ function http_request(data, string_path,string_method,cb,orig_request_handle,ori
 		res.setEncoding('utf8');
 		res.on('data', function (chunk) {
 			if (cb) {
-				if (orig_response_handle) return cb(chunk,orig_request_handle,orig_response_handle,res);
-				else return cb(chunk);
+				if (orig_response_handle){
+					if (array_files){
+					 cb(chunk,orig_request_handle,orig_response_handle,res);
+				 	}
+					else {
+						cb(chunk,orig_request_handle,orig_response_handle,res,array_files);
+					}
+				 }
+				else cb(chunk);
 			}
 			else {
 				console.log('request without callback')
@@ -277,7 +331,7 @@ function http_request(data, string_path,string_method,cb,orig_request_handle,ori
 	});
 
 	// post the data
-	post_req.write(data);
+	post_req.write(content);
 	post_req.end();
 }
 
@@ -448,8 +502,21 @@ function folder_created(chunk,orig_request_handle,orig_response_handle,res){
 	}
 }
 
-function folder_access_granted(chunk,orig_request_handle,orig_response_handle,res){
+function offre_folder_created(chunk,orig_request_handle,orig_response_handle,res){
 	console.log(chunk)
+	if (JSON.parse(chunk).success){
+		var id_folder = JSON.parse(chunk).data.id;
+		var data = files_to_upload.shift();
+		console.log("document à upload" + JSON.stringify(data))
+		var dms_session = orig_request_handle.session.dms_session;
+		http_request(data,"/folder/"+id_folder+"/document","PUT",document_uploaded,orig_request_handle,orig_response_handle,dms_session);
+	}
+	else {
+		console.log("erreur lors de la création du folder : " + chunk)
+	}
+}
+
+function folder_access_granted(chunk,orig_request_handle,orig_response_handle,res){
 	if (JSON.parse(chunk).success){
 		var user = JSON.parse(chunk).message;
 		mysql.query("SELECT id FROM tblUsers WHERE login = ?", [user],(error,results,fields)=>{
@@ -467,6 +534,17 @@ function folder_access_granted(chunk,orig_request_handle,orig_response_handle,re
 	else {
 		console.log("failed access grant : " + chunk);
 		resign_up(orig_request_handle,orig_response_handle);
+	}
+}
+
+function document_uploaded(chunk,orig_request_handle,orig_response_handle,res){
+	console.log('doc uploaded : ' + chunk)
+	var data = files_to_upload.shift();
+	console.log("next piece to attach" + JSON.stringify(data))
+	if (JSON.parse(chunk).success && data){
+		var id_document = JSON.parse(chunk).data.id;
+		var dms_session = orig_request_handle.session.dms_session;
+		http_request(data,"/document/"+id_document+"/attachment","POST",document_uploaded,orig_request_handle,orig_response_handle,dms_session)
 	}
 }
 

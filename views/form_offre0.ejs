@@ -5,10 +5,10 @@
   <div class="row-fluid">
     <legend>Appel d'offre</legend>
     <form action="/offre" method="post" enctype="multipart/form-data">
+      <input type="hidden" name="form" value="offre">
       <div class="form-group control-group col-md-2">
-        <input type="hidden" name="form" value="offre">
         <label for="selectMenu" class="control-label">Année :</label>
-        <select id="selectMenu" class="custom-select ">
+        <select id="selectMenu" class="custom-select" name="annee">
 
           <%a=new Date().getFullYear();for (var i = a; i < a+3; i++){b=i+1;%>
             <option value="<%-i%>-<%-b%>"><%-i%>-<%-b%></option>
