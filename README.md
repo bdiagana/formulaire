@@ -22,17 +22,28 @@ Pas besoin de le relancer à chaque modification (utilisation de nodemon)
 dans conf/node-app.conf
 
     ; fichier de configuration de l'application
-    
-    ;; concerne l'application elle meme
-    [app]  
+    [app]
     port = 3000
 
-    ;; concerne la ged
+    ; informations relatives au portail SeedDMS
     [gedportal]
-    hostname = localhost 
+    hostname = localhost
     port = 80
 
-    ;; compte administrateur de la ged
+    ; identifiants administrateur de SeedDMS
     [geduser]
     username = user
     password = pass
+
+    ; compte mail à utiliser pour envoyer les codes de vérification
+    [mail]
+    user = adresse@mail.com
+    pass = password
+
+    ; informations pour la connexion à la base de donnée MySQL de SeedDMS
+    [mysql]
+    hostname = localhost
+    port = 3306
+    db = database
+    user = user
+    pass = pass
