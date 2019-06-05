@@ -84,7 +84,7 @@ app.get('/offre', (req, res) => {
 
 	if (req.session.dms_session) {
 		if (req.session.user) res.locals.user = req.session.user;
-		res.render('form_offre0');
+		res.render('form_offre');
 	}
 	else {
 		req.session.error = "Veuillez vous connecter";
