@@ -1,5 +1,5 @@
 // imports modules nodejs
-const http = require('http');
+const request = require('request');
 const querystring = require('querystring');
 const fs = require('fs');
 const express = require('express');
@@ -48,6 +48,7 @@ app.set('view engine', 'ejs')
 
 // get routes
 app.get('/',(req,res) => {
+	req.session.offre = req.query.offre;
 	res.redirect('/signin');
 });
 
@@ -189,7 +190,7 @@ app.post('/offre',upload.array('docs',12), (req,res) => {
 				var data = files_to_upload.shift();
 				console.log("data to send :" + JSON.stringify(data))
 				var dms_session = req.session.dms_session;
-				http_request(data,"/folder/"+id_folder+"/document","PUT",document_uploaded,req,res,dms_session);
+				http_request(data,"/folder/"+id_folder+"/document","POST",document_uploaded,req,res,dms_session);
 			}
 		});
 
@@ -198,49 +199,6 @@ app.post('/offre',upload.array('docs',12), (req,res) => {
 	res.statusCode = 200;
 	res.end(JSON.stringify(req.body));
 })
-
-// post routes
-app.post('/process',upload.array('docs', 12), (req, res) => {
-
-	if (req.session.dms_session === undefined) {
-		req.session.error = "Veuillez vous connecter";
-		res.redirect("/signin");
-		return
-	}
-
-	switch(req.body['form']){
-		case "signin":
-
-		http_request('{"user":"' + req.body.user + '","pass":"' + req.body.pass + '"}',"/login","POST",user_connected,req,res);
-
-		break;
-		case "signup":
-
-		//connection administrateur
-		http_request('{"user":"' + conf.geduser.username + '","pass":"' + conf.geduser.password + '"}',"/login","POST",admin_connection,req,res);
-
-		break;
-		case "offre":
-
-		console.log(req.session)
-
-		mysql.query("SELECT homefolder FROM tblUsers WHERE login = ?", [req.session.user], (error,results,fields)=>{
-			if (error) throw error;
-			console.log(results[0].homefolder);
-
-
-		});
-
-		console.log('offre ' +req.files)
-		res.statusCode = 200;
-		res.end(JSON.stringify(req.body));
-		break;
-		case 'verify':
-		res.render('form_offre0');
-		break;
-
-	}
-});
 
 // démarrage du serveur
 app.listen(conf.app.port, () => console.log(`Example app listening on port ${conf.app.port}!`));
@@ -252,10 +210,8 @@ function account(chunk){
 	http_request("{}","/logout","GET",disconnect);
 }
 
-
-
 // automatise les requetes
-// data : json à envoyer
+// data : json ou file à envoyer
 // string_path : chemin de l'API sur lequel requeter
 // string_method : méthode à utiliser GET,POST,PUT,DELETE
 // cb : fonction de callback
@@ -264,38 +220,13 @@ function account(chunk){
 // dms_session : session dms utilisateur (overwrite admin session)
 function http_request(data, string_path,string_method,cb,orig_request_handle,orig_response_handle, dms_session) {
 
-	var content = "";
-	var array_files;
-	var extended = "";
-
-	if (typeof data === 'string' || data instanceof String){
-		var content_type = "application/json";
-		content = data;
-	}
-	else {
-		var file = data;
-		var content = fs.readFileSync(file.path);
-		var content_type = file.mimetype;
-		extended = "?name=test&origfilename="+escape(file.originalname)+"";
-	}
-
-	var path_prefix = '/restapi/index.php' + string_path;
-
-	var path = (extended != "" ? path_prefix + extended : path_prefix);
-
-	// An object of options to indicate where to post to
 	var post_options = {
-		host: conf.gedportal.hostname,
-		port: conf.gedportal.port,
-		path: path,
 		method: string_method,
-		headers: {
-			'Content-Type': content_type,
-			'Content-Length': Buffer.byteLength(content)
-		}
+		baseUrl: 'http://' + conf.gedportal.hostname + ":" + conf.gedportal.port,
+		url: '/restapi/index.php' + string_path,
+		headers: {}
 	};
 
-	// si dms_session sinon si admin_session sinon rien
 	if (dms_session && dms_session != ""){
 		post_options.headers["Cookie"] = dms_session;
 		console.log('user cookie sent');
@@ -308,31 +239,23 @@ function http_request(data, string_path,string_method,cb,orig_request_handle,ori
 		console.log('no cookie sent');
 	}
 
-	// Set up the request
-	var post_req = http.request(post_options, function(res) {
-		res.setEncoding('utf8');
-		res.on('data', function (chunk) {
-			if (cb) {
-				if (orig_response_handle){
-					if (array_files){
-					 cb(chunk,orig_request_handle,orig_response_handle,res);
-				 	}
-					else {
-						cb(chunk,orig_request_handle,orig_response_handle,res,array_files);
-					}
-				 }
-				else cb(chunk);
-			}
-			else {
-				console.log('request without callback')
-				return false;
-			}
+	if (typeof data === 'string' || data instanceof String){
+		post_options.headers["content-type"] = "application/json";
+		post_options.body = data
+		console.log("data de type string")
+	}
+	else {
+		post_options.headers["content-type"] = "multipart/form-data";
+		post_options.formData = {
+			file: fs.createReadStream(data.path)
+		}
+	}
+
+	request(post_options).on("response",(response)=>{
+		response.on('data',(chunk)=>{
+			if (cb) cb(chunk,orig_request_handle,orig_response_handle,response)
 		});
 	});
-
-	// post the data
-	post_req.write(content);
-	post_req.end();
 }
 
 // CALLBACKS : code à mettre dans un module
@@ -398,6 +321,7 @@ function account_creation(chunk,orig_request_handle,orig_response_handle,res){
 
 //callback connection
 function user_connected(chunk,orig_request_handle,orig_response_handle,res){
+	console.log(chunk)
 	var success = JSON.parse(chunk).success;
 	if (success){
 		orig_request_handle.session.dms_session = res.headers['set-cookie'];
@@ -509,7 +433,7 @@ function offre_folder_created(chunk,orig_request_handle,orig_response_handle,res
 		var data = files_to_upload.shift();
 		console.log("document à upload" + JSON.stringify(data))
 		var dms_session = orig_request_handle.session.dms_session;
-		http_request(data,"/folder/"+id_folder+"/document","PUT",document_uploaded,orig_request_handle,orig_response_handle,dms_session);
+		http_request(data,"/folder/"+id_folder+"/document","POST",document_uploaded,orig_request_handle,orig_response_handle,dms_session);
 	}
 	else {
 		console.log("erreur lors de la création du folder : " + chunk)
@@ -528,8 +452,6 @@ function folder_access_granted(chunk,orig_request_handle,orig_response_handle,re
 				orig_response_handle.redirect("/signin");
 			});
 		});
-
-
 	}
 	else {
 		console.log("failed access grant : " + chunk);
@@ -538,14 +460,16 @@ function folder_access_granted(chunk,orig_request_handle,orig_response_handle,re
 }
 
 function document_uploaded(chunk,orig_request_handle,orig_response_handle,res){
-	console.log('doc uploaded : ' + chunk)
-	var data = files_to_upload.shift();
-	console.log("next piece to attach" + JSON.stringify(data))
-	if (JSON.parse(chunk).success && data){
-		var id_document = JSON.parse(chunk).data.id;
-		var dms_session = orig_request_handle.session.dms_session;
-		http_request(data,"/document/"+id_document+"/attachment","POST",document_uploaded,orig_request_handle,orig_response_handle,dms_session)
+	if (JSON.parse(chunk).success){
+		console.log('doc uploaded : ' + chunk)
+		if (files_to_upload){
+			var id_document = JSON.parse(chunk).data.id;
+			var dms_session = orig_request_handle.session.dms_session;
+			var data = files_to_upload.shift();
+			http_request(data,"/document/"+id_document+"/attachment","POST",document_uploaded,orig_request_handle,orig_response_handle,dms_session)
+		}
 	}
+	else console.log("fail to attach or upload file"+ chunk)
 }
 
 function resign_up(orig_request_handle,orig_response_handle){
