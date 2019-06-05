@@ -29,6 +29,7 @@ var admin_session;
 
 // used to queue files to upload
 var files_to_upload;
+var id_document_attach;
 
 var upload = multer({ dest: 'uploads/' })
 
@@ -193,11 +194,7 @@ app.post('/offre',upload.array('docs',12), (req,res) => {
 				http_request(data,"/folder/"+id_folder+"/document","POST",document_uploaded,req,res,dms_session);
 			}
 		});
-
 	});
-
-	res.statusCode = 200;
-	res.end(JSON.stringify(req.body));
 })
 
 // démarrage du serveur
@@ -247,7 +244,9 @@ function http_request(data, string_path,string_method,cb,orig_request_handle,ori
 	else {
 		post_options.headers["content-type"] = "multipart/form-data";
 		post_options.formData = {
-			file: fs.createReadStream(data.path)
+			file: fs.createReadStream(data.path),
+			name: data.originalname,
+			"Content-Type": data.mimetype
 		}
 	}
 
@@ -462,12 +461,14 @@ function folder_access_granted(chunk,orig_request_handle,orig_response_handle,re
 function document_uploaded(chunk,orig_request_handle,orig_response_handle,res){
 	if (JSON.parse(chunk).success){
 		console.log('doc uploaded : ' + chunk)
-		if (files_to_upload){
-			var id_document = JSON.parse(chunk).data.id;
+		console.log(files_to_upload)
+		if (files_to_upload.length > 0){
+			if(JSON.parse(chunk).data.id && JSON.parse(chunk).data.id != "") id_document_attach = JSON.parse(chunk).data.id;
 			var dms_session = orig_request_handle.session.dms_session;
 			var data = files_to_upload.shift();
-			http_request(data,"/document/"+id_document+"/attachment","POST",document_uploaded,orig_request_handle,orig_response_handle,dms_session)
+			http_request(data,"/document/"+id_document_attach+"/attachment","POST",document_uploaded,orig_request_handle,orig_response_handle,dms_session)
 		}
+		else orig_response_handle.render('form_success',{url: "http://" + conf.gedportal.hostname + ":" + conf.gedportal.port});
 	}
 	else console.log("fail to attach or upload file"+ chunk)
 }
