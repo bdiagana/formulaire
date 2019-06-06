@@ -1,5 +1,5 @@
 // imports modules nodejs
-const http = require('http');
+const request = require('request');
 const querystring = require('querystring');
 const fs = require('fs');
 const express = require('express');
@@ -25,9 +25,11 @@ const session = require('express-session');
 
 
 //variable de session dms
-var mydms_session;
-var mydms_cookie;
 var admin_session;
+
+// used to queue files to upload
+var files_to_upload;
+var id_document_attach;
 
 var upload = multer({ dest: 'uploads/' })
 
@@ -47,6 +49,7 @@ app.set('view engine', 'ejs')
 
 // get routes
 app.get('/',(req,res) => {
+	req.session.offre = req.query.offre;
 	res.redirect('/signin');
 });
 
@@ -82,7 +85,7 @@ app.get('/offre', (req, res) => {
 
 	if (req.session.dms_session) {
 		if (req.session.user) res.locals.user = req.session.user;
-		res.render('form_offre0');
+		res.render('form_offre');
 	}
 	else {
 		req.session.error = "Veuillez vous connecter";
@@ -150,7 +153,7 @@ app.post('/signin',(req,res)=>{
 	http_request('{"user":"' + req.body.user + '","pass":"' + req.body.pass + '"}',"/login","POST",user_connected,req,res);
 })
 
-app.post('/signup',(res,req)=>{
+app.post('/signup',(req,res)=>{
 	//connection administrateur
 	http_request('{"user":"' + conf.geduser.username + '","pass":"' + conf.geduser.password + '"}',"/login","POST",admin_connection,req,res);
 })
@@ -163,61 +166,48 @@ app.post('/offre',upload.array('docs',12), (req,res) => {
 		return
 	}
 
-	console.log(req.session.user)
+	// if (req.files === undefined || req.files === []) {
+	// 	req.session.error = "Aucun fichier envoyés";
+	// 	res.redirect("/offre");
+	// }
 
-	var query = "SELECT homefolder FROM tblUsers WHERE login = '?'";
+	console.log(JSON.stringify(req.files));
 
-	mysql.query(query, [req.session.user], (error,results,fields)=>{
+	files_to_upload = req.files;
+
+	var query_folder = "SELECT homefolder FROM tblUsers WHERE login = ?";
+
+	mysql.query(query_folder, [req.session.user], (error,results,fields)=>{
 		if (error) throw error;
-	});
+		var folder = results[0].homefolder;
+		console.log("folder : " + folder);
 
-	console.log('offre ' +req.files)
-	res.statusCode = 200;
-	res.end(JSON.stringify(req.body));
-})
+		var query_test_folder = "SELECT id,parent FROM tblFolders WHERE name = ?";
 
-// post routes
-app.post('/process',upload.array('docs', 12), (req, res) => {
+		var annee = req.body.annee;
 
-	if (req.session.dms_session === undefined) {
-		req.session.error = "Veuillez vous connecter";
-		res.redirect("/signin");
-		return
-	}
-
-	switch(req.body['form']){
-		case "signin":
-
-		http_request('{"user":"' + req.body.user + '","pass":"' + req.body.pass + '"}',"/login","POST",user_connected,req,res);
-
-		break;
-		case "signup":
-
-		//connection administrateur
-		http_request('{"user":"' + conf.geduser.username + '","pass":"' + conf.geduser.password + '"}',"/login","POST",admin_connection,req,res);
-
-		break;
-		case "offre":
-
-		console.log(req.session)
-
-		mysql.query("SELECT homefolder FROM tblUsers WHERE login = ?", [req.session.user], (error,results,fields)=>{
+		mysql.query(query_test_folder,[annee],(error,results2,fields)=>{
 			if (error) throw error;
-			console.log(results[0].homefolder);
 
+			if (results2[0] === undefined || results2[0].parent != folder){
+				console.log("creation du dossier année : " + annee + " pour l'utilisateur : " + req.session.user);
+				var data = {
+					name: annee
+				};
 
+				http_request(JSON.stringify(data),"/folder/"+folder+"/createfolder","POST",offre_folder_created,req,res,req.session.dms_session);
+			}
+			else {
+				console.log("dossier année : " + annee + " déjà présent pour l'utilisateur : " + req.session.user);
+				var id_folder = results2[0].id;
+				var data = files_to_upload.shift();
+				console.log("data to send :" + JSON.stringify(data))
+				var dms_session = req.session.dms_session;
+				http_request(data,"/folder/"+id_folder+"/document","POST",document_uploaded,req,res,dms_session);
+			}
 		});
-
-		console.log('offre ' +req.files)
-		res.statusCode = 200;
-		res.end(JSON.stringify(req.body));
-		break;
-		case 'verify':
-		res.render('form_offre0');
-		break;
-
-	}
-});
+	});
+})
 
 // démarrage du serveur
 app.listen(conf.app.port, () => console.log(`Example app listening on port ${conf.app.port}!`));
@@ -229,41 +219,26 @@ function account(chunk){
 	http_request("{}","/logout","GET",disconnect);
 }
 
-
-
 // automatise les requetes
-// data : json à envoyer
+// data : json ou file à envoyer
 // string_path : chemin de l'API sur lequel requeter
 // string_method : méthode à utiliser GET,POST,PUT,DELETE
 // cb : fonction de callback
 // orig_request_handle : handle de request utilisateur
 // orig_response_handle : handle de response utilisateur
-// dms_session : session dms utilisateur (overwrite cookie session)
+// dms_session : session dms utilisateur (overwrite admin session)
 function http_request(data, string_path,string_method,cb,orig_request_handle,orig_response_handle, dms_session) {
 
-	// if (typeof data === 'string' || data instanceof String){
-	// 	var content_type = "application/json";
-	// }
-	// else {
-	// 	var content_type =
-	// }
-
-	// An object of options to indicate where to post to
 	var post_options = {
-		host: conf.gedportal.hostname,
-		port: conf.gedportal.port,
-		path: '/restapi/index.php'+string_path,
 		method: string_method,
-		headers: {
-			'Content-Type': 'application/json',
-			'Content-Length': Buffer.byteLength(data)
-		}
+		baseUrl: 'http://' + conf.gedportal.hostname + ":" + conf.gedportal.port,
+		url: '/restapi/index.php' + string_path,
+		headers: {}
 	};
-	// si dms_session sinon si admin_session sinon rien
+
 	if (dms_session && dms_session != ""){
 		post_options.headers["Cookie"] = dms_session;
 		console.log('user cookie sent');
-
 	}
 	else if (admin_session && admin_session != ""){
 		post_options.headers["Cookie"] = admin_session;
@@ -273,24 +248,25 @@ function http_request(data, string_path,string_method,cb,orig_request_handle,ori
 		console.log('no cookie sent');
 	}
 
-	// Set up the request
-	var post_req = http.request(post_options, function(res) {
-		res.setEncoding('utf8');
-		res.on('data', function (chunk) {
-			if (cb) {
-				if (orig_response_handle) return cb(chunk,orig_request_handle,orig_response_handle,res);
-				else return cb(chunk);
-			}
-			else {
-				console.log('request without callback')
-				return false;
-			}
+	if (typeof data === 'string' || data instanceof String){
+		post_options.headers["content-type"] = "application/json";
+		post_options.body = data
+		console.log("data de type string")
+	}
+	else {
+		post_options.headers["content-type"] = "multipart/form-data";
+		post_options.formData = {
+			file: fs.createReadStream(data.path),
+			name: data.originalname,
+			"Content-Type": data.mimetype
+		}
+	}
+
+	request(post_options).on("response",(response)=>{
+		response.on('data',(chunk)=>{
+			if (cb) cb(chunk,orig_request_handle,orig_response_handle,response)
 		});
 	});
-
-	// post the data
-	post_req.write(data);
-	post_req.end();
 }
 
 // CALLBACKS : code à mettre dans un module
@@ -356,6 +332,7 @@ function account_creation(chunk,orig_request_handle,orig_response_handle,res){
 
 //callback connection
 function user_connected(chunk,orig_request_handle,orig_response_handle,res){
+	console.log(chunk)
 	var success = JSON.parse(chunk).success;
 	if (success){
 		orig_request_handle.session.dms_session = res.headers['set-cookie'];
@@ -460,8 +437,21 @@ function folder_created(chunk,orig_request_handle,orig_response_handle,res){
 	}
 }
 
-function folder_access_granted(chunk,orig_request_handle,orig_response_handle,res){
+function offre_folder_created(chunk,orig_request_handle,orig_response_handle,res){
 	console.log(chunk)
+	if (JSON.parse(chunk).success){
+		var id_folder = JSON.parse(chunk).data.id;
+		var data = files_to_upload.shift();
+		console.log("document à upload" + JSON.stringify(data))
+		var dms_session = orig_request_handle.session.dms_session;
+		http_request(data,"/folder/"+id_folder+"/document","POST",document_uploaded,orig_request_handle,orig_response_handle,dms_session);
+	}
+	else {
+		console.log("erreur lors de la création du folder : " + chunk)
+	}
+}
+
+function folder_access_granted(chunk,orig_request_handle,orig_response_handle,res){
 	if (JSON.parse(chunk).success){
 		var user = JSON.parse(chunk).message;
 		mysql.query("SELECT id FROM tblUsers WHERE login = ?", [user],(error,results,fields)=>{
@@ -473,13 +463,26 @@ function folder_access_granted(chunk,orig_request_handle,orig_response_handle,re
 				orig_response_handle.redirect("/signin");
 			});
 		});
-
-
 	}
 	else {
 		console.log("failed access grant : " + chunk);
 		resign_up(orig_request_handle,orig_response_handle);
 	}
+}
+
+function document_uploaded(chunk,orig_request_handle,orig_response_handle,res){
+	if (JSON.parse(chunk).success){
+		console.log('doc uploaded : ' + chunk)
+		console.log(files_to_upload)
+		if (files_to_upload.length > 0){
+			if(JSON.parse(chunk).data.id && JSON.parse(chunk).data.id != "") id_document_attach = JSON.parse(chunk).data.id;
+			var dms_session = orig_request_handle.session.dms_session;
+			var data = files_to_upload.shift();
+			http_request(data,"/document/"+id_document_attach+"/attachment","POST",document_uploaded,orig_request_handle,orig_response_handle,dms_session)
+		}
+		else orig_response_handle.render('form_success',{url: "http://" + conf.gedportal.hostname + ":" + conf.gedportal.port});
+	}
+	else console.log("fail to attach or upload file"+ chunk)
 }
 
 function resign_up(orig_request_handle,orig_response_handle){
