@@ -119,6 +119,18 @@ app.get('/verify', (req, res) => {
 	}
 });
 
+app.get('/prestation', (req, res) => {
+
+	if (req.session.dms_session) {
+		if (req.session.user) res.locals.user = req.session.user;
+		res.render('form_presta');
+	}
+	else {
+		req.session.error = "Veuillez vous connecter";
+		res.redirect("/signin");
+	}
+});
+
 app.post('/code',(req,res)=>{
 	//require('./response').verify_mail(req,res);
 	console.log("verif_mail");
