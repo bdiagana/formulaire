@@ -1,5 +1,7 @@
 $(document).ready(function () {
 
+  $('tablePresta').dataTable();
+
   $("#errordiv").delay(1000).slideUp();
   $("#successdiv").delay(1000).slideUp();
 
