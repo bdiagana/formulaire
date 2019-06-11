@@ -22,7 +22,8 @@ const mysql = require('mysql').createConnection({
 	charset: 'utf8'
 });
 const session = require('express-session');
-
+const datatable = require('datatables.net');
+const editor = require('datatables.net-editor-server');
 
 //variable de session dms
 var admin_session;
@@ -207,6 +208,12 @@ app.post('/offre',upload.array('docs',12), (req,res) => {
 			}
 		});
 	});
+})
+
+app.post('/prestation',(req,res)=>{
+	require('datatables.net');
+	require('datatables.net-editor-server');
+	//http_request('{"user":"' + conf.geduser.username + '","pass":"' + conf.geduser.password + '"}',"/login","POST",admin_connection,req,res);
 })
 
 // démarrage du serveur
