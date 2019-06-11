@@ -4,7 +4,7 @@
 <div class="container-fluid">
   <div class="row-fluid">
     <legend>Prestations</legend>
-    <form action="/process" method="post" enctype="multipart/form-data">
+    
         <div class="form-group control-group ">
           <div  class="btn-group btn-group-toggle" data-toggle="buttons" id="sumselector">
             <label id="radio3" class="btn btn-secondary btn-sm">
@@ -16,70 +16,78 @@
           </div>
         </div>
 
-        <div class="form-group control-group col-md-3" id="doc1" hidden="true">
+        <div class="form-group control-group" id="doc1" hidden="true">
            <div class="custom-file">
-               <span>Identifiants de la prestations
+               <span>Identifiants de la prestations 
 					<select id="numPrestations" >
 					</select>
 				</span>
             </div>
         </div>
         </div>
-		<div class="form-group control-group col-md-3" id="doc5" hidden="true">
+		<div class="form-group control-group" id="doc2" hidden="true">
+           <button id="addRow" >ajouter une nouvelle ligne</button>
+		</div>
+		<div class="form-group control-group" id="doc3" hidden="true">
+		   <table class="table-condensed" id="tableAnnexe"></table>
+        </div>
+		
+		<div class="form-group control-group" id="doc5" hidden="true">
            <table class="table-condensed" id="tablePresta"></table>
         </div>
-		<div class="form-group control-group col-md-3" id="doc2" hidden="true">
-           <table class="table-condensed" id="tableAnnexe"></table>
-        </div>
+		<button id="valider" type="submit" class="btn btn-primary" style="display:none">Valider</button>
       </div>
-    </form>
+	  
   </div>
 </div>
 <script type="text/javascript">
-  // $('.custom-file input').change(function (e) {
-  //     var files = [];
-  //     for (var i = 0; i < $(this)[0].files.length; i++) {
-  //         files.push($(this)[0].files[i].name);
-  //     }
-  //     $(this).next('.custom-file-label').html(files.join(', '));
-  // });
+$(document).ready( function () {  
+  	
+	var dataT= [["Cours","M2I","12","Heure","7","20%"]];
+  
+    var t=$('#tableAnnexe').DataTable({
+        "data": dataT,
+		"columns": [
+            { "title": "Designation" },
+            { "title": "Formation" },
+            { "title": "Taux horaire" },
+            { "title": "Unite" },
+            { "title": "Quantite" },
+            { "title": "TVA" }
+        ],
+		"paging":   false,
+        "ordering": false,
+        "info":     false
+    });
+	
+	$('#addRow').on( 'click', function () {
+        document.getElementById("valider").style.display = "block";
+		t.row.add( [
+            '.1',
+            '.2',
+            '.3',
+            '.4',
+            '.5',
+			'.6'
+        ] ).draw();
+    } );
 
-  $(document).ready( function () {
-    ('#tableAnnexe').DataTable();
-  //   $('#tableAnnexe').DataTable({
-  //       "columns": [
-  //           { "data": "Désignation" },
-  //           { "data": "Formation" },
-  //           { "data": "Taux horaire" },
-  //           { "data": "Unité" },
-  //           { "data": "Quantité" },
-  //           { "data": "TVA" }
-  //       ],
-	// 	"data": [
-	// 		{ "Désignation" : "Cours"},
-	// 		{ "Formation" : "M2I"},
-	// 		{ "Taux horaire" : ""},
-	// 		{ "Unité" : "Heure"},
-	// 		{ "Quantité" : "7"},
-	// 		{ "TVA" : "20%"},
-	// 	],
-  //       "ordering": false,
-  //       "info":     false
-  //   });
-  //
-	// $('#tablePresta').DataTable({
-  //       "columns": [
-  //           { "data": "Responsable" },
-  //           { "data": "Autre responsable" },
-  //           { "data": "Matière" },
-  //           { "data": "Raison sociale" },
-  //           { "data": "Intervenant" },
-  //           { "data": "TVA" }
-  //       ],
-	// 	"paging":   false,
-  //       "ordering": false,
-  //       "info":     false
-  //   });
+	$('#valider').on( 'click', function () {
+        document.getElementById("valider").style.display = "none";
+		});
+	
+	$('#tablePresta').DataTable({
+        "columns": [
+            { "title": "Responsable" },
+            { "title": "Autre responsable" },
+            { "title": "Matière" },
+            { "title": "Raison sociale" },
+            { "title": "Intervenant" },
+            { "title": "TVA" }
+        ],
+        "ordering": false,
+        "info":     false
+    });
 } );
 
 </script>
