@@ -232,8 +232,7 @@ function http_request(data, string_path,string_method,cb,orig_request_handle,ori
 
 	var post_options = {
 		method: string_method,
-		baseUrl: 'http://' + conf.gedportal.hostname + ":" + conf.gedportal.port,
-		url: '/restapi/index.php' + string_path,
+		url:  'http://' + conf.gedportal.hostname + ":" + conf.gedportal.port + '/restapi/index.php' + string_path,
 		headers: {}
 	};
 
