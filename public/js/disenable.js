@@ -51,10 +51,16 @@ $(document).ready(function () {
     if(selectedValue1){
       document.getElementById("doc1").hidden = false;
       document.getElementById("doc2").hidden = false;
-      document.getElementById("doc3").hidden = false;
-      document.getElementById("doc4").hidden = false;
+      document.getElementById("doc3").hidden = true;
+      document.getElementById("doc4").hidden = true;
       document.getElementById("doc5").hidden = true;
       document.getElementById("doc6").hidden = true;
+	  document.getElementById("doc7").hidden = true;
+	  document.getElementById("doc8").hidden = true;
+	  document.getElementById("doc9").hidden = true;
+	  document.getElementById("doc10").hidden = true;
+	  document.getElementById("doc11").hidden = true;
+	  document.getElementById("doc12").hidden = true;
       document.getElementById("radio1").className="btn btn-secondary active btn-sm";
       document.getElementById("radio2").className="btn btn-secondary  btn-sm";
       document.getElementById("radio3").className="btn btn-secondary btn-sm";
@@ -63,10 +69,16 @@ $(document).ready(function () {
     if (selectedValue2) {
       document.getElementById("doc1").hidden = false;
       document.getElementById("doc2").hidden = false;
-      document.getElementById("doc3").hidden = false;
-      document.getElementById("doc4").hidden = false;
+      document.getElementById("doc3").hidden = true;
+      document.getElementById("doc4").hidden = true;
       document.getElementById("doc5").hidden = true;
       document.getElementById("doc6").hidden = true;
+	  document.getElementById("doc7").hidden = true;
+	  document.getElementById("doc8").hidden = true;
+	  document.getElementById("doc9").hidden = true;
+	  document.getElementById("doc10").hidden = true;
+	  document.getElementById("doc11").hidden = true;
+	  document.getElementById("doc12").hidden = true;
       document.getElementById("radio1").className="btn btn-secondary btn-sm";
       document.getElementById("radio2").className="btn btn-secondary active btn-sm";
       document.getElementById("radio3").className="btn btn-secondary btn-sm";
@@ -74,10 +86,16 @@ $(document).ready(function () {
     } else if (selectedValue3) {
       document.getElementById("doc1").hidden = true;
       document.getElementById("doc2").hidden = true;
-      document.getElementById("doc3").hidden = true;
-      document.getElementById("doc4").hidden = true;
+      document.getElementById("doc3").hidden = false;
+      document.getElementById("doc4").hidden = false;
       document.getElementById("doc5").hidden = false;
       document.getElementById("doc6").hidden = false;
+	  document.getElementById("doc7").hidden = false;
+	  document.getElementById("doc8").hidden = false;
+	  document.getElementById("doc9").hidden = false;
+	  document.getElementById("doc10").hidden = false;
+	  document.getElementById("doc11").hidden = false;
+	  document.getElementById("doc12").hidden = false;
       document.getElementById("radio1").className="btn btn-secondary btn-sm";
       document.getElementById("radio2").className="btn btn-secondary  btn-sm";
       document.getElementById("radio3").className="btn btn-secondary active btn-sm";
@@ -85,10 +103,16 @@ $(document).ready(function () {
     } else if (selectedValue4) {
       document.getElementById("doc1").hidden = true;
       document.getElementById("doc2").hidden = true;
-      document.getElementById("doc3").hidden = true;
-      document.getElementById("doc4").hidden = true;
+      document.getElementById("doc3").hidden = false;
+      document.getElementById("doc4").hidden = false;
       document.getElementById("doc5").hidden = false;
       document.getElementById("doc6").hidden = false;
+	  document.getElementById("doc7").hidden = false;
+	  document.getElementById("doc8").hidden = false;
+	  document.getElementById("doc9").hidden = false;
+	  document.getElementById("doc10").hidden = false;
+	  document.getElementById("doc11").hidden = false;
+	  document.getElementById("doc12").hidden = false;
       document.getElementById("radio1").className="btn btn-secondary btn-sm";
       document.getElementById("radio2").className="btn btn-secondary  btn-sm";
       document.getElementById("radio3").className="btn btn-secondary  btn-sm";
