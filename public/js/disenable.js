@@ -3,6 +3,8 @@ $(document).ready(function () {
   $("#errordiv").delay(1000).slideUp();
   $("#successdiv").delay(1000).slideUp();
 
+  //  $('#plus-sign').click(addDocument());
+
   $("#mailvalidator").hide();
   $("#uservalidator").hide();
 
@@ -48,6 +50,8 @@ $(document).ready(function () {
     var selectedValue3 = $("input[id='defaultGroupExample3']:checked").val();
     var selectedValue4 = $("input[id='defaultGroupExample4']:checked").val();
 
+    document.getElementById("adddoc").hidden = false;
+
     if(selectedValue1){
       document.getElementById("doc1").hidden = false;
       document.getElementById("doc2").hidden = false;
@@ -55,12 +59,12 @@ $(document).ready(function () {
       document.getElementById("doc4").hidden = true;
       document.getElementById("doc5").hidden = true;
       document.getElementById("doc6").hidden = true;
-	  document.getElementById("doc7").hidden = true;
-	  document.getElementById("doc8").hidden = true;
-	  document.getElementById("doc9").hidden = true;
-	  document.getElementById("doc10").hidden = true;
-	  document.getElementById("doc11").hidden = true;
-	  document.getElementById("doc12").hidden = true;
+      document.getElementById("doc7").hidden = true;
+      document.getElementById("doc8").hidden = true;
+      document.getElementById("doc9").hidden = true;
+      document.getElementById("doc10").hidden = true;
+      document.getElementById("doc11").hidden = true;
+      document.getElementById("doc12").hidden = true;
       document.getElementById("radio1").className="btn btn-secondary active btn-sm";
       document.getElementById("radio2").className="btn btn-secondary  btn-sm";
       document.getElementById("radio3").className="btn btn-secondary btn-sm";
@@ -73,12 +77,12 @@ $(document).ready(function () {
       document.getElementById("doc4").hidden = true;
       document.getElementById("doc5").hidden = true;
       document.getElementById("doc6").hidden = true;
-	  document.getElementById("doc7").hidden = true;
-	  document.getElementById("doc8").hidden = true;
-	  document.getElementById("doc9").hidden = true;
-	  document.getElementById("doc10").hidden = true;
-	  document.getElementById("doc11").hidden = true;
-	  document.getElementById("doc12").hidden = true;
+      document.getElementById("doc7").hidden = true;
+      document.getElementById("doc8").hidden = true;
+      document.getElementById("doc9").hidden = true;
+      document.getElementById("doc10").hidden = true;
+      document.getElementById("doc11").hidden = true;
+      document.getElementById("doc12").hidden = true;
       document.getElementById("radio1").className="btn btn-secondary btn-sm";
       document.getElementById("radio2").className="btn btn-secondary active btn-sm";
       document.getElementById("radio3").className="btn btn-secondary btn-sm";
@@ -90,12 +94,12 @@ $(document).ready(function () {
       document.getElementById("doc4").hidden = false;
       document.getElementById("doc5").hidden = false;
       document.getElementById("doc6").hidden = false;
-	  document.getElementById("doc7").hidden = false;
-	  document.getElementById("doc8").hidden = false;
-	  document.getElementById("doc9").hidden = false;
-	  document.getElementById("doc10").hidden = false;
-	  document.getElementById("doc11").hidden = false;
-	  document.getElementById("doc12").hidden = false;
+      document.getElementById("doc7").hidden = false;
+      document.getElementById("doc8").hidden = false;
+      document.getElementById("doc9").hidden = false;
+      document.getElementById("doc10").hidden = false;
+      document.getElementById("doc11").hidden = false;
+      document.getElementById("doc12").hidden = false;
       document.getElementById("radio1").className="btn btn-secondary btn-sm";
       document.getElementById("radio2").className="btn btn-secondary  btn-sm";
       document.getElementById("radio3").className="btn btn-secondary active btn-sm";
@@ -107,12 +111,12 @@ $(document).ready(function () {
       document.getElementById("doc4").hidden = false;
       document.getElementById("doc5").hidden = false;
       document.getElementById("doc6").hidden = false;
-	  document.getElementById("doc7").hidden = false;
-	  document.getElementById("doc8").hidden = false;
-	  document.getElementById("doc9").hidden = false;
-	  document.getElementById("doc10").hidden = false;
-	  document.getElementById("doc11").hidden = false;
-	  document.getElementById("doc12").hidden = false;
+      document.getElementById("doc7").hidden = false;
+      document.getElementById("doc8").hidden = false;
+      document.getElementById("doc9").hidden = false;
+      document.getElementById("doc10").hidden = false;
+      document.getElementById("doc11").hidden = false;
+      document.getElementById("doc12").hidden = false;
       document.getElementById("radio1").className="btn btn-secondary btn-sm";
       document.getElementById("radio2").className="btn btn-secondary  btn-sm";
       document.getElementById("radio3").className="btn btn-secondary  btn-sm";
@@ -181,4 +185,14 @@ function check_user(){
   .fail((info) => {
     console.log( "error" + JSON.stringify(info) );
   });
+}
+
+function addDocument(){
+  var div_doc = `<div class="form-group control-group col-md-5">
+  <div class="custom-file">
+  <input type="file" name="docs" class="custom-file-input" id="inputGroupFile13" lang="fr">
+  <label class="custom-file-label" for="inputGroupFile12" aria-describedby="inputGroupFileAddon13">Autre document </label>
+  </div>`;
+
+  $('#moredocs').append(div_doc);
 }

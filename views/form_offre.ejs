@@ -4,7 +4,7 @@
 <div class="container-fluid">
   <div class="row-fluid">
     <legend>Appel d'offre</legend>
-    <form action="/offre" method="post" enctype="multipart/form-data">
+    <form id="form-offre" action="/offre" method="post" enctype="multipart/form-data">
       <input type="hidden" name="form" value="offre">
       <div class="form-group control-group col-md-2">
         <label for="selectMenu" class="control-label">Année :</label>
@@ -120,6 +120,13 @@
         </div>
       </div>
 
+      <div id="moredocs">
+
+      </div>
+
+      <div id="adddoc" class="form-group control-group col-md-3" hidden="true">
+        <i data-toggle="tooltip" data-placement="right" title="Ajouter des documents supplémentaires" onclick="addDocument();" id="plus-sign" class="fas fa-plus-square text-success"></i>
+      </div>
       <div class="form-group control-group col-md-3">
         <button type="submit" class="btn btn-primary">Valider</button>
       </div>
