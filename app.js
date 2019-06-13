@@ -1,18 +1,11 @@
 // imports modules nodejs
-const request = require('request');
 const querystring = require('querystring');
 const fs = require('fs');
 const express = require('express');
 const app = express();
 const conf = require('./load_conf');
 const multer = require('multer');
-const mail = require('nodemailer').createTransport({
-	service: 'gmail',
-	auth: {
-		user: conf.mail.user,
-		pass: conf.mail.pass
-	}
-});
+
 const mysql = require('mysql').createConnection({
 	host: conf.mysql.hostname,
 	user: conf.mysql.user,
@@ -23,9 +16,16 @@ const mysql = require('mysql').createConnection({
 });
 const session = require('express-session');
 
+// imports routes
+const signin_router = require('./routes/signin_router');
+const disonnect_router = require('./routes/disconnect_router');
+const signup_router = require('./routes/signup_router');
+// const offre_router = require('./routes/offre_router');
+// const verify_router = require('./routes/verify_router');
+
 
 //variable de session dms
-var admin_session;
+global.admin_session;
 
 // used to queue files to upload
 var files_to_upload;
@@ -44,6 +44,12 @@ app.use(session({
 	cookie: { secure: false }
 }));
 
+app.use('/signin', signin_router);
+app.use('/disconnect', disonnect_router);
+app.use('/signup', signup_router);
+// app.use('/offre', offre_router);
+// app.use('/verify', verify_router);
+
 // paramétrage moteur de template
 app.set('view engine', 'ejs')
 
@@ -53,34 +59,7 @@ app.get('/',(req,res) => {
 	res.redirect('/signin');
 });
 
-app.get('/disconnect',(req,res)=>{
-	if (req.session.dms_session) {
-		req.session.dms_session = undefined
-		req.session.success = "Déconnecté !"
-	}
-	res.redirect("/signin");
-});
 
-app.get('/signin', (req, res) => {
-	if (req.session.dms_session) res.redirect("/offre");
-	else {
-		if (req.session.success !== undefined) {
-			res.locals.success = req.session.success;
-			req.session.success = undefined;
-		}
-		if (req.session.error !== undefined) {
-			res.locals.error = req.session.error;
-			req.session.error = undefined;
-		}
-
-		res.render('form_login');
-	}
-});
-
-app.get('/signup', (req, res) => {
-	if (req.session.dms_session) res.redirect("/offre");
-	else res.render('form_creation')
-});
 
 app.get('/offre', (req, res) => {
 
@@ -150,15 +129,6 @@ app.post('/code',(req,res)=>{
 	});
 });
 
-app.post('/signin',(req,res)=>{
-	http_request('{"user":"' + req.body.user + '","pass":"' + req.body.pass + '"}',"/login","POST",user_connected,req,res);
-})
-
-app.post('/signup',(req,res)=>{
-	//connection administrateur
-	http_request('{"user":"' + conf.geduser.username + '","pass":"' + conf.geduser.password + '"}',"/login","POST",admin_connection,req,res);
-})
-
 app.post('/offre',upload.array('docs',12), (req,res) => {
 
 	if (req.session.dms_session === undefined) {
@@ -220,134 +190,12 @@ function account(chunk){
 	http_request("{}","/logout","GET",disconnect);
 }
 
-// automatise les requetes
-// data : json ou file à envoyer
-// string_path : chemin de l'API sur lequel requeter
-// string_method : méthode à utiliser GET,POST,PUT,DELETE
-// cb : fonction de callback
-// orig_request_handle : handle de request utilisateur
-// orig_response_handle : handle de response utilisateur
-// dms_session : session dms utilisateur (overwrite admin session)
-function http_request(data, string_path,string_method,cb,orig_request_handle,orig_response_handle, dms_session) {
-
-	var post_options = {
-		method: string_method,
-		url:  'http://' + conf.gedportal.hostname + ":" + conf.gedportal.port + '/restapi/index.php' + string_path,
-		headers: {}
-	};
-
-	if (dms_session && dms_session != ""){
-		post_options.headers["Cookie"] = dms_session;
-		console.log('user cookie sent');
-	}
-	else if (admin_session && admin_session != ""){
-		post_options.headers["Cookie"] = admin_session;
-		console.log('admin cookie sent');
-	}
-	else {
-		console.log('no cookie sent');
-	}
-
-	if (typeof data === 'string' || data instanceof String){
-		post_options.headers["content-type"] = "application/json";
-		post_options.body = data
-		console.log("data de type string")
-	}
-	else {
-		post_options.headers["content-type"] = "multipart/form-data";
-		post_options.formData = {
-			file: fs.createReadStream(data.path),
-			name: data.originalname,
-			"Content-Type": data.mimetype
-		}
-	}
-
-	request(post_options, (error,response,body)=>{
-		if (error) throw error;
-			if (cb) cb(body,orig_request_handle,orig_response_handle,response)
-	});
-}
 
 // CALLBACKS : code à mettre dans un module
 
-// callback connection administrateur
-function admin_connection(chunk,orig_request_handle,orig_response_handle,res){
-	if (res){
-		var success = JSON.parse(chunk)['success'];
-		if (success) {
-			admin_session = res.headers['set-cookie'];
-
-			console.log('connection admin : ' + chunk)
-
-			console.log('ad : ' + admin_session);
-			// infos supplémentaires client concaténées dans les commentaire
-			//	var comment = `${orig_request_handle.body.societe}
-			//	${orig_request_handle.body.adresse}
-			//	${orig_request_handle.body.atelephone}`;
-			var comment = "";
-
-			// teste  présence des champs pour la concaténation
-			if (orig_request_handle.body.societe) comment += orig_request_handle.body.societe + "\n";
-			if (orig_request_handle.body.adresse) comment += orig_request_handle.body.adresse + "\n";
-			if (orig_request_handle.body.telephone) comment += orig_request_handle.body.telephone + '\n';
-
-			// informations création de compte
-			var account_informations = {
-				name: orig_request_handle.body.nom + " " + orig_request_handle.body.prenom,
-				pass: orig_request_handle.body.pass,
-				user: orig_request_handle.body.user,
-				email: orig_request_handle.body.mail,
-				theme: 'bootstrap',
-				language: 'fr',
-				comment: comment
-			};
-
-			console.log('creation');
-
-			// requete création de compte
-			http_request(JSON.stringify(account_informations),'/users','POST',account_creation,orig_request_handle,orig_response_handle);
-		}
-		else {
-			console.log('erreur 500');
-			orig_response_handle.status(500).end();
-			return
-		}
-	}
 
 
 
-}
-
-// callback création de compte
-function account_creation(chunk,orig_request_handle,orig_response_handle,res){
-	if (JSON.parse(chunk).success) {
-		console.log('creation compte : \n' + chunk);
-		http_request('{"disable":"true"}',"/users/" + orig_request_handle.body.user + "/disable",'PUT',user_disabled,orig_request_handle,orig_response_handle);
-	}
-	else {
-		resign_up(orig_request_handle,orig_response_handle);
-	}
-}
-
-//callback connection
-function user_connected(chunk,orig_request_handle,orig_response_handle,res){
-	console.log('chunk' + chunk)
-	var success = JSON.parse(chunk).success;
-	if (success){
-		orig_request_handle.session.dms_session = res.headers['set-cookie'];
-		orig_request_handle.session.user = orig_request_handle.body.user;
-		console.log(orig_request_handle.session.dms_session);
-		orig_response_handle.redirect("/offre");
-	}
-	else {
-		var infos_back = {
-			user: orig_request_handle.body.user,
-			pass: orig_request_handle.body.pass,
-			error: "Nom d'utilisateur et/ou mot de passe incorrect !"
-		};
-		orig_response_handle.render("form_login", infos_back);
-	}
-}
 
 function user_disabled(chunk,orig_request_handle,orig_response_handle,res){
 	var success = JSON.parse(chunk).success;
@@ -485,6 +333,7 @@ function document_uploaded(chunk,orig_request_handle,orig_response_handle,res){
 }
 
 function resign_up(orig_request_handle,orig_response_handle){
+	
 	var infos_back = {
 		nom: orig_request_handle.body.nom,
 		prenom: orig_request_handle.body.prenom,
