@@ -20,7 +20,7 @@ const session = require('express-session');
 const signin_router = require('./routes/signin_router');
 const disonnect_router = require('./routes/disconnect_router');
 const signup_router = require('./routes/signup_router');
-// const offre_router = require('./routes/offre_router');
+const offre_router = require('./routes/offre_router');
 // const verify_router = require('./routes/verify_router');
 
 
@@ -63,14 +63,6 @@ app.get('/',(req,res) => {
 
 app.get('/offre', (req, res) => {
 
-	if (req.session.dms_session) {
-		if (req.session.user) res.locals.username = req.session.user;
-		res.render('form_offre');
-	}
-	else {
-		req.session.error = "Veuillez vous connecter";
-		res.redirect("/signin");
-	}
 });
 
 app.get('/verify', (req, res) => {
@@ -131,110 +123,11 @@ app.post('/code',(req,res)=>{
 
 app.post('/offre',upload.array('docs',12), (req,res) => {
 
-	if (req.session.dms_session === undefined) {
-		req.session.error = "Veuillez vous connecter";
-		res.redirect("/signin");
-		return
-	}
 
-	// if (req.files === undefined || req.files === []) {
-	// 	req.session.error = "Aucun fichier envoyés";
-	// 	res.redirect("/offre");
-	// }
-
-	console.log(JSON.stringify(req.files));
-
-	files_to_upload = req.files;
-
-	var query_folder = "SELECT homefolder FROM tblUsers WHERE login = ?";
-
-	mysql.query(query_folder, [req.session.user], (error,results,fields)=>{
-		if (error) throw error;
-		var folder = results[0].homefolder;
-		console.log("folder : " + folder);
-
-		var query_test_folder = "SELECT id,parent FROM tblFolders WHERE name = ?";
-
-		var annee = req.body.annee;
-
-		mysql.query(query_test_folder,[annee],(error,results2,fields)=>{
-			if (error) throw error;
-
-			if (results2[0] === undefined || results2[0].parent != folder){
-				console.log("creation du dossier année : " + annee + " pour l'utilisateur : " + req.session.user);
-				var data = {
-					name: annee
-				};
-
-				http_request(JSON.stringify(data),"/folder/"+folder+"/createfolder","POST",offre_folder_created,req,res,req.session.dms_session);
-			}
-			else {
-				console.log("dossier année : " + annee + " déjà présent pour l'utilisateur : " + req.session.user);
-				var id_folder = results2[0].id;
-				var data = files_to_upload.shift();
-				console.log("data to send :" + JSON.stringify(data))
-				var dms_session = req.session.dms_session;
-				http_request(data,"/folder/"+id_folder+"/document","POST",document_uploaded,req,res,dms_session);
-			}
-		});
-	});
 })
 
 // démarrage du serveur
 app.listen(conf.app.port, () => console.log(`Example app listening on port ${conf.app.port}!`));
-
-// callback détail compte. @deprecated
-function account(chunk){
-	console.log(chunk);
-	mydms_session=null;
-	http_request("{}","/logout","GET",disconnect);
-}
-
-
-// CALLBACKS : code à mettre dans un module
-
-
-
-
-
-function user_disabled(chunk,orig_request_handle,orig_response_handle,res){
-	var success = JSON.parse(chunk).success;
-	if (res){
-		if(success){
-
-			var code_verif = require('hat')();
-
-			mysql.query('INSERT INTO verif_mail (`id`,`mail`,`code`,`verified`) VALUES (?,?,?,?);',[orig_request_handle.body.user,orig_request_handle.body.mail,code_verif,false],(error,results,fields)=>{
-				if (error) throw error;
-				console.log("Insrtion reussie")
-			});
-
-			var mailOptions = {
-				from: 'ged@edu.itescia.fr',
-				to: orig_request_handle.body.mail,
-				subject: 'Votre code d\'activation pour GEDi',
-				text: 'Voici le code à entrer : ' + code_verif
-			};
-
-			mail.sendMail(mailOptions, function(error, info){
-				if (error) {
-					console.log(error);
-				} else {
-					console.log('Email sent: ' + info.response);
-				}
-			});
-			orig_response_handle.render("./form_code", {mail: orig_request_handle.body.mail});
-		}
-		else {
-			console.log('user not disabled' + chunk)
-			resign_up(orig_request_handle,orig_response_handle)
-		}
-	}
-}
-
-function disconnect(chunk){
-	console.log('admin disconnected : ' + chunk);
-}
 
 function update_result(results,req,res){
 	var user = results[0].id;
@@ -284,19 +177,7 @@ function folder_created(chunk,orig_request_handle,orig_response_handle,res){
 	}
 }
 
-function offre_folder_created(chunk,orig_request_handle,orig_response_handle,res){
-	console.log(chunk)
-	if (JSON.parse(chunk).success){
-		var id_folder = JSON.parse(chunk).data.id;
-		var data = files_to_upload.shift();
-		console.log("document à upload" + JSON.stringify(data))
-		var dms_session = orig_request_handle.session.dms_session;
-		http_request(data,"/folder/"+id_folder+"/document","POST",document_uploaded,orig_request_handle,orig_response_handle,dms_session);
-	}
-	else {
-		console.log("erreur lors de la création du folder : " + chunk)
-	}
-}
+
 
 function folder_access_granted(chunk,orig_request_handle,orig_response_handle,res){
 	if (JSON.parse(chunk).success){
@@ -317,23 +198,8 @@ function folder_access_granted(chunk,orig_request_handle,orig_response_handle,re
 	}
 }
 
-function document_uploaded(chunk,orig_request_handle,orig_response_handle,res){
-	if (JSON.parse(chunk).success){
-		console.log('doc uploaded : ' + chunk)
-		console.log(files_to_upload)
-		if (files_to_upload.length > 0){
-			if(JSON.parse(chunk).data.id && JSON.parse(chunk).data.id != "") id_document_attach = JSON.parse(chunk).data.id;
-			var dms_session = orig_request_handle.session.dms_session;
-			var data = files_to_upload.shift();
-			http_request(data,"/document/"+id_document_attach+"/attachment","POST",document_uploaded,orig_request_handle,orig_response_handle,dms_session)
-		}
-		else orig_response_handle.render('form_success',{url: "http://" + conf.gedportal.hostname + ":" + conf.gedportal.port});
-	}
-	else console.log("fail to attach or upload file"+ chunk)
-}
-
 function resign_up(orig_request_handle,orig_response_handle){
-	
+
 	var infos_back = {
 		nom: orig_request_handle.body.nom,
 		prenom: orig_request_handle.body.prenom,
