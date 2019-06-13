@@ -26,68 +26,228 @@
         </div>
         </div>
 		<div class="form-group control-group" id="doc2" hidden="true">
-           <button id="addRow" >ajouter une nouvelle ligne</button>
-		</div>
-		<div class="form-group control-group" id="doc3" hidden="true">
-		   <table class="table-condensed" id="tableAnnexe"></table>
+		   <table class="table-condensed" id="tableAnnexe">
+			<thead>
+				<tr>
+					<th>Désignation</th>
+					<th>Formation</th>
+					<th>Taux horaire TTC</th>
+					<th>Unité (heure/forfait)</th>
+					<th>Quantité estimative</th>
+					<th>Taux horaire H.T</th>
+					<th>Montant total € H.T</th>
+					<th>TVA</th>
+				</tr>
+			</thead>
+		   </table>
         </div>
-		
-		<div class="form-group control-group" id="doc5" hidden="true">
-           <table class="table-condensed" id="tablePresta"></table>
+		<div class="form-group control-group" id="doc3" hidden="true"></div>
+		<div class="form-group control-group" id="doc4" hidden="true">
+           <table class="table-condensed" id="tablePresta">
+			<thead>
+				<tr>
+					<th>Responsable suivi marché</th>
+					<th>Autre coordinateur</th>
+					<th>Urgent</th>
+					<th>Matière</th>
+					<th>Raison sociale</th>
+					<th>Intervenant</th>
+					<th>TVA</th>
+					<th>Tarif TTC niv1</th>
+					<th>Tarif TTC coding</th>
+					<th>Tarif TTC FCP1</th>
+					<th>Nb heures tarif FCP1</th>
+					<th>Formation1</th>
+				</tr>
+				</thead>
+			</table>
         </div>
-		<button id="valider" type="submit" class="btn btn-primary" style="display:none">Valider</button>
       </div>
 	  
   </div>
 </div>
 <script type="text/javascript">
-$(document).ready( function () {  
-  	
-	var dataT= [["Cours","M2I","12","Heure","7","20%"]];
-  
-    var t=$('#tableAnnexe').DataTable({
-        "data": dataT,
-		"columns": [
-            { "title": "Designation" },
-            { "title": "Formation" },
-            { "title": "Taux horaire" },
-            { "title": "Unite" },
-            { "title": "Quantite" },
-            { "title": "TVA" }
-        ],
-		"paging":   false,
-        "ordering": false,
-        "info":     false
-    });
-	
-	$('#addRow').on( 'click', function () {
-        document.getElementById("valider").style.display = "block";
-		t.row.add( [
-            '.1',
-            '.2',
-            '.3',
-            '.4',
-            '.5',
-			'.6'
-        ] ).draw();
-    } );
+var editorPresta;
+var editorAnnexe;
 
-	$('#valider').on( 'click', function () {
-        document.getElementById("valider").style.display = "none";
-		});
-	
-	$('#tablePresta').DataTable({
-        "columns": [
-            { "title": "Responsable" },
-            { "title": "Autre responsable" },
-            { "title": "Matière" },
-            { "title": "Raison sociale" },
-            { "title": "Intervenant" },
-            { "title": "TVA" }
+$(document).ready(function() {
+	//tableau Prestations
+    editorPresta = new $.fn.dataTable.Editor( {
+        //ajax: "../php/staff.php",
+        table: "#tablePresta",
+        fields: [ {
+                label: "Responsable suivi marché:",
+                name: "responsable_suivi_marche",
+				type:  "select",
+                options: [
+                    { label: "Mohamed Bougga", value: "Mohamed Bougga" },
+                    { label: "Bernard Borel", value: "Bernard Borel" },
+                    { label: "Fériel Bouakazz", value: "Fériel Bouakazz" }
+                ]
+            }, {
+                label: "Autre coordinateur:",
+                name: "autre_coordinateur"
+            }, {
+                label: "Urgent:",
+                name: "urgent"
+            }, {
+                label: "Matière:",
+                name: "matiere"
+            }, {
+                label: "Raison sociale:",
+                name: "raison_sociale"
+            }, {
+                label: "Intervenant:",
+                name: "intervenant",
+				type:  "select",
+                options: [
+                    { label: "Rabah Hamiane", value: "Rabah Hamiane" },
+                    { label: "François Cornet", value: "François Cornet" },
+                    { label: "Carina Roels", value: "Carina Roels" }
+                ]
+            }, {
+                label: "TVA:",
+                name: "tva"
+            }, {
+                label: "Tarif TTC niv1:",
+                name: "tarif_ttc_niv1"
+            }, {
+                label: "Tarif TTC niv2:",
+                name: "tarif_ttc_niv2"
+            }, {
+                label: "Tarif TTC niv3:",
+                name: "tarif_ttc_niv3"
+            }, {
+                label: "Tarif TTC coding:",
+                name: "tarif_ttc_coding"
+            }, {
+                label: "Tarif TTC FCP1:",
+                name: "tarif_ttc_fcp1"
+            }, {
+                label: "Nb heures tarif FCP1:",
+                name: "nb_heures_tarif_fcp1"
+            }, {
+                label: "Tarif TTC FCP2:",
+                name: "tarif_ttc_fcp2"
+            }, {
+                label: "Nb heures tarif FCP2:",
+                name: "nb_heures_tarif_fcp2"
+            }, {
+                label: "Tarif TTC FCP3:",
+                name: "tarif_ttc_fcp3"
+            }, {
+                label: "Nb heures tarif FCP3:",
+                name: "nb_heures_tarif_fcp3"
+            }, {
+                label: "Tarif TTC FCP4:",
+                name: "tarif_ttc_fcp4"
+            }, {
+                label: "Nb heures tarif FCP4:",
+                name: "nb_heures_tarif_fcp4"
+            }, {
+                label: "Visite entreprise tarif TTC 1:",
+                name: "vis_ent_tarif1"
+            }, {
+                label: "Nb heures visite entreprise tarif 1:",
+                name: "nb_heures_vis_ent_tarif1"
+            }, {
+                label: "Visite téléphonique tarif TTC 2:",
+                name: "vis_tel_tarif2"
+            }, {
+                label: "Nb heures visite téléphonique tarif 2:",
+                name: "nb_heures_vis_tel_tarif2"
+            }, {
+                label: "Visite téléphonique tarif TTC 3:",
+                name: "vis_ent_tarif3"
+            }, {
+                label: "Nb heures visite tarif 3:",
+                name: "nb_heures_vis_tarif3"
+            }, {
+                label: "SRE Tarif TTC:",
+                name: "sre_tarif_ttc"
+            }, {
+                label: "SRE nombre d'heures:",
+                name: "sre_nb_heures"
+            }
+        ]
+    } );
+ 
+    $('#tablePresta').DataTable( {
+        dom: "Bfrtip",
+        //ajax: "../php/staff.php",
+		"scrollX": true,
+        columns: [
+            { data: "responsable_suivi_marche"},
+            { data: "autre_coordinateur" },
+            { data: "urgent" },
+			{ data: "matiere" },
+            { data: "raison_sociale" },
+            { data: "intervenant" },
+			{ data: "tva" },
+			{ data: "tarif_ttc_niv1" },
+			{ data: "tarif_ttc_coding" },
+			{ data: "tarif_ttc_fcp1" },
+			{ data: "nb_heures_tarif_fcp1" },
+            { data: "formation1" }
         ],
-        "ordering": false,
-        "info":     false
-    });
+        select: true,
+        buttons: [
+            { extend: "create", editor: editorPresta },
+            { extend: "edit",   editor: editorPresta },
+            { extend: "remove", editor: editorPresta }
+        ],
+		 "columnDefs": [{ "targets": -1, "data": null, "defaultContent": "<button id='btnDetails' class='btn btn-success' width='25px'>Détails</button>"}]
+    } );
+	
+	//Tableau Annexes
+    editorAnnexe = new $.fn.dataTable.Editor( {
+        //ajax: "../php/staff.php",
+        table: "#tableAnnexe",
+        fields: [ {
+                label: "Désignation:",
+                name: "designation"
+            }, {
+                label: "Formation:",
+                name: "formation"
+            }, {
+                label: "Taux horaire TTC:",
+                name: "taux_horaire_ttc"
+            }, {
+                label: "Unité (heure/forfait):",
+                name: "unite"
+            }, {
+                label: "Quantité estimative:",
+                name: "quantite_estimative"
+            }, {
+                label: "Taux horaire H.T:",
+                name: "taux_horaire_ht"
+            }
+        ]
+    } );
+ 
+    $('#tableAnnexe').DataTable( {
+        dom: "Bfrtip",
+        //ajax: "../php/staff.php",
+        columns: [
+            { data: "designation"},
+            { data: "formation" },
+            { data: "taux_horaire_ttc" },
+            { data: "unite" },
+			{ data: "quantite_estimative" },
+			{ data: "taux_horaire_ht" },
+			{ data: "montant_total_ht" },
+			{ data: "tva" }
+        ],
+        select: true,
+		language: {
+                "url": "dataTables.french.lang"
+        },
+        buttons: [
+            { extend: "create", editor: editorAnnexe },
+            { extend: "edit",   editor: editorAnnexe },
+            { extend: "remove", editor: editorAnnexe }
+        ]
+	} );
 } );
 
 </script>
