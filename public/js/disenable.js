@@ -1,9 +1,10 @@
+var num_doc = 13;
 $(document).ready(function () {
-
-  $('tablePresta').dataTable();
 
   $("#errordiv").delay(1000).slideUp();
   $("#successdiv").delay(1000).slideUp();
+
+  //  $('#plus-sign').click(addDocument());
 
   $("#mailvalidator").hide();
   $("#uservalidator").hide();
@@ -50,13 +51,21 @@ $(document).ready(function () {
     var selectedValue3 = $("input[id='defaultGroupExample3']:checked").val();
     var selectedValue4 = $("input[id='defaultGroupExample4']:checked").val();
 
+    document.getElementById("adddoc").hidden = false;
+
     if(selectedValue1){
       document.getElementById("doc1").hidden = false;
       document.getElementById("doc2").hidden = false;
-      document.getElementById("doc3").hidden = false;
-      document.getElementById("doc4").hidden = false;
+      document.getElementById("doc3").hidden = true;
+      document.getElementById("doc4").hidden = true;
       document.getElementById("doc5").hidden = true;
       document.getElementById("doc6").hidden = true;
+      document.getElementById("doc7").hidden = true;
+      document.getElementById("doc8").hidden = true;
+      document.getElementById("doc9").hidden = true;
+      document.getElementById("doc10").hidden = true;
+      document.getElementById("doc11").hidden = true;
+      document.getElementById("doc12").hidden = true;
       document.getElementById("radio1").className="btn btn-secondary active btn-sm";
       document.getElementById("radio2").className="btn btn-secondary  btn-sm";
       document.getElementById("radio3").className="btn btn-secondary btn-sm";
@@ -65,10 +74,16 @@ $(document).ready(function () {
     if (selectedValue2) {
       document.getElementById("doc1").hidden = false;
       document.getElementById("doc2").hidden = false;
-      document.getElementById("doc3").hidden = false;
-      document.getElementById("doc4").hidden = false;
+      document.getElementById("doc3").hidden = true;
+      document.getElementById("doc4").hidden = true;
       document.getElementById("doc5").hidden = true;
       document.getElementById("doc6").hidden = true;
+      document.getElementById("doc7").hidden = true;
+      document.getElementById("doc8").hidden = true;
+      document.getElementById("doc9").hidden = true;
+      document.getElementById("doc10").hidden = true;
+      document.getElementById("doc11").hidden = true;
+      document.getElementById("doc12").hidden = true;
       document.getElementById("radio1").className="btn btn-secondary btn-sm";
       document.getElementById("radio2").className="btn btn-secondary active btn-sm";
       document.getElementById("radio3").className="btn btn-secondary btn-sm";
@@ -76,10 +91,16 @@ $(document).ready(function () {
     } else if (selectedValue3) {
       document.getElementById("doc1").hidden = true;
       document.getElementById("doc2").hidden = true;
-      document.getElementById("doc3").hidden = true;
-      document.getElementById("doc4").hidden = true;
+      document.getElementById("doc3").hidden = false;
+      document.getElementById("doc4").hidden = false;
       document.getElementById("doc5").hidden = false;
       document.getElementById("doc6").hidden = false;
+      document.getElementById("doc7").hidden = false;
+      document.getElementById("doc8").hidden = false;
+      document.getElementById("doc9").hidden = false;
+      document.getElementById("doc10").hidden = false;
+      document.getElementById("doc11").hidden = false;
+      document.getElementById("doc12").hidden = false;
       document.getElementById("radio1").className="btn btn-secondary btn-sm";
       document.getElementById("radio2").className="btn btn-secondary  btn-sm";
       document.getElementById("radio3").className="btn btn-secondary active btn-sm";
@@ -87,10 +108,16 @@ $(document).ready(function () {
     } else if (selectedValue4) {
       document.getElementById("doc1").hidden = true;
       document.getElementById("doc2").hidden = true;
-      document.getElementById("doc3").hidden = true;
-      document.getElementById("doc4").hidden = true;
+      document.getElementById("doc3").hidden = false;
+      document.getElementById("doc4").hidden = false;
       document.getElementById("doc5").hidden = false;
       document.getElementById("doc6").hidden = false;
+      document.getElementById("doc7").hidden = false;
+      document.getElementById("doc8").hidden = false;
+      document.getElementById("doc9").hidden = false;
+      document.getElementById("doc10").hidden = false;
+      document.getElementById("doc11").hidden = false;
+      document.getElementById("doc12").hidden = false;
       document.getElementById("radio1").className="btn btn-secondary btn-sm";
       document.getElementById("radio2").className="btn btn-secondary  btn-sm";
       document.getElementById("radio3").className="btn btn-secondary  btn-sm";
@@ -159,4 +186,23 @@ function check_user(){
   .fail((info) => {
     console.log( "error" + JSON.stringify(info) );
   });
+}
+
+function addDocument(){
+  if (num_doc > 17) {
+    return;
+  }
+  var div_doc = `<div class="form-group control-group col-md-5">
+  <div class="custom-file">
+  <input type="file" name="docs" class="custom-file-input" id="inputGroupFile${num_doc}" lang="fr">
+  <label class="custom-file-label" for="inputGroupFile${num_doc}" aria-describedby="inputGroupFileAddon${num_doc}">Autre document </label>
+  </div>`;
+
+  $('#moredocs').append(div_doc);
+  num_doc ++;
+  if (num_doc > 17) {
+    $("#plus-sign").attr('class', "fas fa-ban text-danger fa-lg");
+    $("#adddoc").attr('title', "Nombre maximum de documents atteint");
+    return;
+  }
 }
