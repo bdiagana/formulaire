@@ -86,7 +86,17 @@ app.get('/offre', (req, res) => {
 
 	if (req.session.dms_session) {
 		if (req.session.user) res.locals.username = req.session.user;
-		res.render('form_offre');
+
+		const { moins5k, entre5ket25k, entre25ket90k, plusde90k } = conf.workflow ;
+
+		var data = {
+			moins5k: moins5k,
+			entre5ket25k: entre5ket25k,
+			entre25ket90k: entre25ket90k,
+			plusde90k: plusde90k
+		}
+
+		res.render('form_offre', data);
 	}
 	else {
 		req.session.error = "Veuillez vous connecter";
@@ -172,8 +182,6 @@ app.post('/offre',upload.array('docs',12), (req,res) => {
 	// 	res.redirect("/offre");
 	// }
 
-	console.log(JSON.stringify(req.files));
-
 	files_to_upload = req.files;
 
 	var query_folder = "SELECT homefolder FROM tblUsers WHERE login = ?";
@@ -235,6 +243,8 @@ function http_request(data, string_path,string_method,cb,orig_request_handle,ori
 		url:  'http://' + conf.gedportal.hostname + ":" + conf.gedportal.port + '/restapi/index.php' + string_path,
 		headers: {}
 	};
+
+	console.log(post_options.url)
 
 	if (dms_session && dms_session != ""){
 		post_options.headers["Cookie"] = dms_session;
@@ -470,19 +480,29 @@ function folder_access_granted(chunk,orig_request_handle,orig_response_handle,re
 }
 
 function document_uploaded(chunk,orig_request_handle,orig_response_handle,res){
+
+	console.log("chunked : " + chunk)
+	var dms_session = orig_request_handle.session.dms_session;
 	if (JSON.parse(chunk).success){
-		console.log('doc uploaded : ' + chunk)
-		console.log(files_to_upload)
 		if (files_to_upload.length > 0){
-			if(JSON.parse(chunk).data.id && JSON.parse(chunk).data.id != "") id_document_attach = JSON.parse(chunk).data.id;
-			var dms_session = orig_request_handle.session.dms_session;
-			var data = files_to_upload.shift();
-			http_request(data,"/document/"+id_document_attach+"/attachment","POST",document_uploaded,orig_request_handle,orig_response_handle,dms_session)
+			if(JSON.parse(chunk).data.id && JSON.parse(chunk).data.id != "") {
+				id_document_attach = JSON.parse(chunk).data.id;
+				var data = {
+					workflow: orig_request_handle.body.workflow
+				};
+				http_request(JSON.stringify(data),"/document/"+id_document_attach+"/workflow","POST",document_uploaded,orig_request_handle,orig_response_handle,dms_session)
+			}
+			else {
+				var data = files_to_upload.shift();
+				http_request(data,"/document/"+id_document_attach+"/attachment","POST",document_uploaded,orig_request_handle,orig_response_handle,dms_session)
+			}
 		}
 		else orig_response_handle.render('form_success',{url: "http://" + conf.gedportal.hostname + ":" + conf.gedportal.port});
 	}
 	else console.log("fail to attach or upload file"+ chunk)
 }
+
+
 
 function resign_up(orig_request_handle,orig_response_handle){
 	var infos_back = {

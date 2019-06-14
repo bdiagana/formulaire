@@ -22,16 +22,16 @@
         <label for="sumSelector" class="control-label">Somme :</label><br />
         <div class="btn-group btn-group-toggle" data-toggle="buttons" id="sumselector">
           <label id="radio1" class="btn btn-secondary btn-sm">
-            <input type="radio" name="workflow" id="defaultGroupExample1" autocomplete="off" value ="6"> Moins de 5K
+            <input type="radio" name="workflow" id="defaultGroupExample1" autocomplete="off" value ="<%- locals.moins5k %>"> Moins de 5K
           </label>
           <label id="radio2" class="btn btn-secondary btn-sm">
-            <input type="radio" name="workflow" id="defaultGroupExample2" autocomplete="off" value ="7"> Entre 5K et 25K
+            <input type="radio" name="workflow" id="defaultGroupExample2" autocomplete="off" value ="<%- locals.entre5ket25k %>"> Entre 5K et 25K
           </label>
           <label id="radio3" class="btn btn-secondary btn-sm">
-            <input type="radio" name="workflow" id="defaultGroupExample3" autocomplete="off" value ="8"> Entre 25K et 90K
+            <input type="radio" name="workflow" id="defaultGroupExample3" autocomplete="off" value ="<%- locals.entre25ket90k %>"> Entre 25K et 90K
           </label>
           <label id="radio4" class="btn btn-secondary btn-sm">
-            <input type="radio" name="workflow" id="defaultGroupExample4" autocomplete="off" value ="9"> Plus de 90K
+            <input type="radio" name="workflow" id="defaultGroupExample4" autocomplete="off" value ="<%- locals.plusde90k %>"> Plus de 90K
           </label>
         </div>
       </div>
