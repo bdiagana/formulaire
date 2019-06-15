@@ -5,7 +5,7 @@ $(document).ready(function () {
   $("#errordiv").delay(1000).slideUp();
   $("#successdiv").delay(1000).slideUp();
 
-  $("#mailvalidator").hide();
+ /* $("#mailvalidator").hide();
   $("#uservalidator").hide();
 
   $('#user').keyup(() => {
@@ -41,7 +41,7 @@ $(document).ready(function () {
     if ($('#mail').val() != "") check_mail();
     else $('#mailvalidator').hide();
   });
-
+*/
 
 
   $("input[type='radio']").on('change', function () {
