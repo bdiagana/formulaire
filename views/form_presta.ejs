@@ -46,6 +46,7 @@
            <table class="display" id="tablePresta">
 			<thead>
 				<tr>
+					<th>Id</th>
 					<th>Responsable suivi marché</th>
 					<th>Autre coordinateur</th>
 					<th>Urgent</th>
@@ -88,6 +89,7 @@ var editorAnnexe;
 
 var tradData={
             "lengthMenu": "Afficher _MENU_ lignes par page",
+			"sLengthMenu": "Afficher _MENU_ éléments",
             "zeroRecords": "Aucune donnée trouvée",
             "info": "Page _PAGE_ sur _PAGES_",
             "infoEmpty": "Aucune donnée disponisble",
@@ -98,6 +100,13 @@ var tradData={
 				"previous":"Précédent"
 			},
 			"search":"Rechercher:",
+			"select": {
+				"rows":{
+					_: "%d éléments sélectionnés",
+                    1: "%d élément sélectionné",
+					0: ""
+				}
+			}
         };
 var tradEditor= {
             create: {
@@ -239,6 +248,7 @@ $(document).ready(function() {
 		"scrollX": true,
 		"language": tradData,
         columns: [
+			{ visible: false, data: null},
             { data: "responsable_suivi_marche"},
             { data: "autre_coordinateur" },
             { data: "urgent" },
