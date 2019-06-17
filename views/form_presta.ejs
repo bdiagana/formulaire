@@ -86,12 +86,57 @@
 var editorPresta;
 var editorAnnexe;
 
+var tradData={
+            "lengthMenu": "Afficher _MENU_ lignes par page",
+            "zeroRecords": "Aucune donnée trouvée",
+            "info": "Page _PAGE_ sur _PAGES_",
+            "infoEmpty": "Aucune donnée disponisble",
+            "paginate": {
+				"first":"Premier",
+				"last":"Dernier",
+				"next":"Suivant",
+				"previous":"Précédent"
+			},
+			"search":"Rechercher:",
+        };
+var tradEditor= {
+            create: {
+                button: "Nouveau",
+                title:  "Créer nouvelle entrée",
+                submit: "Créer"
+            },
+            edit: {
+                button: "Modifier",
+                title:  "Modifier entrée",
+                submit: "Actualiser"
+            },
+            remove: {
+                button: "Supprimer",
+                title:  "Supprimer",
+                submit: "Supprimer",
+                confirm: {
+                    _: "Etes-vous sûr de vouloir supprimer %d lignes?",
+                    1: "Etes-vous sûr de vouloir supprimer 1 ligne?"
+                }
+            },
+            error: {
+                system: "Une erreur s’est produite, contacter l’administrateur système"
+            },
+            datetime: {
+                previous: 'Précédent',
+                next:     'Premier',
+                months:   [ 'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre' ],
+                weekdays: [ 'Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam' ]
+            }
+        };
+
 $(document).ready(function() {
 	//tableau Prestations
     editorPresta = new $.fn.dataTable.Editor( {
         //ajax: "../php/staff.php",
         table: "#tablePresta",
-        fields: [ {
+        i18n: tradEditor,
+		fields: [ {
                 label: "Responsable suivi marché:",
                 name: "responsable_suivi_marche",
 				type:  "select",
@@ -192,6 +237,7 @@ $(document).ready(function() {
         dom: "Bfrtip",
         //ajax: "../php/staff.php",
 		"scrollX": true,
+		"language": tradData,
         columns: [
             { data: "responsable_suivi_marche"},
             { data: "autre_coordinateur" },
@@ -235,6 +281,7 @@ $(document).ready(function() {
     editorAnnexe = new $.fn.dataTable.Editor( {
         //ajax: "../php/staff.php",
         table: "#tableAnnexe",
+		i18n: tradEditor,
         fields: [ {
                 label: "Désignation:",
                 name: "designation"
@@ -271,9 +318,7 @@ $(document).ready(function() {
 			{ data: "tva" }
         ],
         select: true,
-		language: {
-                "url": "dataTables.french.lang"
-        },
+		"language": tradData,
         buttons: [
             { extend: "create", editor: editorAnnexe },
             { extend: "edit",   editor: editorAnnexe },
