@@ -77,12 +77,50 @@
                  <label class="custom-file-label" for="inputGroupFile02" aria-describedby="inputGroupFileAddon02">Publication</label>
              </div>
         </div>
-        <div class="form-group control-group col-md-3">
-          <button type="submit" class="btn btn-primary">Valider</button>
+      </div>
+
+      <div class="form-group control-group col-md-5" id="doc9" hidden="true">
+        <div class="custom-file">
+          <input type="file" name="docs" class="custom-file-input" id="inputGroupFile10" lang="fr">
+          <label class="custom-file-label" for="inputGroupFile09" aria-describedby="inputGroupFileAddon10">Attestation de vigilance de - 3 mois </label>
         </div>
       </div>
-    </form>
-  </div>
+
+      <div class="form-group control-group col-md-5" id="doc10" hidden="true">
+        <div class="custom-file">
+          <input type="file" name="docs" class="custom-file-input" id="inputGroupFile11" lang="fr">
+          <label class="custom-file-label" for="inputGroupFile10" aria-describedby="inputGroupFileAddon11">Attestation de régularité fiscale </label>
+        </div>
+      </div>
+
+      <div class="form-group control-group col-md-5" id="doc11" hidden="true">
+        <div class="custom-file">
+          <input type="file" name="docs" class="custom-file-input" id="inputGroupFile12" lang="fr">
+          <label class="custom-file-label" for="inputGroupFile11" aria-describedby="inputGroupFileAddon11">Si salariés étrangers la liste nominative des salariés soumis à autorisation de travail</label>
+        </div>
+      </div>
+
+      <div class="form-group control-group col-md-5" id="doc12" hidden="true">
+        <div class="custom-file">
+          <input type="file" name="docs" class="custom-file-input" id="inputGroupFile13" lang="fr">
+          <label class="custom-file-label" for="inputGroupFile12" aria-describedby="inputGroupFileAddon12">Autre document </label>
+        </div>
+      </div>
+
+      <div id="moredocs">
+
+      </div>
+
+      <div id="adddoc" onclick="addDocument();"  class="form-group control-group col-md-3" hidden="true" data-toggle="tooltip" data-placement="right" title="Ajouter des documents supplémentaires" >
+        <i id="plus-sign" class="fas fa-plus-square text-success fa-lg"></i>
+      </div>
+      <div class="form-group control-group col-md-3">
+        <button type="submit" class="btn btn-primary">Valider</button>
+      </div>
+
+    </div>
+  </form>
+</div>
 </div>
 <script type="text/javascript">
 
