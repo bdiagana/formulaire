@@ -497,7 +497,7 @@ function document_uploaded(chunk,orig_request_handle,orig_response_handle,res){
 				http_request(data,"/document/"+id_document_attach+"/attachment","POST",document_uploaded,orig_request_handle,orig_response_handle,dms_session)
 			}
 		}
-		else orig_response_handle.render('form_success',{url: "http://" + conf.gedportal.hostname + ":" + conf.gedportal.port});
+		else orig_response_handle.render('form_success',{url: "http://" + conf.address.hostname + ":" + conf.gedportal.port});
 	}
 	else console.log("fail to attach or upload file"+ chunk)
 }
