@@ -1,3 +1,4 @@
+var num_doc = 13;
 $(document).ready(function () {
 
   $("#errordiv").delay(1000).slideUp();
@@ -188,11 +189,20 @@ function check_user(){
 }
 
 function addDocument(){
+  if (num_doc > 17) {
+    return;
+  }
   var div_doc = `<div class="form-group control-group col-md-5">
   <div class="custom-file">
-  <input type="file" name="docs" class="custom-file-input" id="inputGroupFile13" lang="fr">
-  <label class="custom-file-label" for="inputGroupFile12" aria-describedby="inputGroupFileAddon13">Autre document </label>
+  <input type="file" name="docs" class="custom-file-input" id="inputGroupFile${num_doc}" lang="fr">
+  <label class="custom-file-label" for="inputGroupFile${num_doc}" aria-describedby="inputGroupFileAddon${num_doc}">Autre document </label>
   </div>`;
 
   $('#moredocs').append(div_doc);
+  num_doc ++;
+  if (num_doc > 17) {
+    $("#plus-sign").attr('class', "fas fa-ban text-danger fa-lg");
+    $("#adddoc").attr('title', "Nombre maximum de documents atteint");
+    return;
+  }
 }
