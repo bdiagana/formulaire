@@ -22,7 +22,8 @@ const mysql = require('mysql').createConnection({
 	charset: 'utf8'
 });
 const session = require('express-session');
-
+const datatable = require('datatables.net');
+const editor = require('datatables.net-editor-server');
 
 //variable de session dms
 var admin_session;
@@ -42,7 +43,7 @@ app.use(session({
 	resave: false,
 	saveUninitialized: true,
 	cookie: { secure: false }
-}));
+}))
 
 // paramétrage moteur de template
 app.set('view engine', 'ejs')
@@ -72,7 +73,6 @@ app.get('/signin', (req, res) => {
 			res.locals.error = req.session.error;
 			req.session.error = undefined;
 		}
-
 		res.render('form_login');
 	}
 });
@@ -85,7 +85,7 @@ app.get('/signup', (req, res) => {
 app.get('/offre', (req, res) => {
 
 	if (req.session.dms_session) {
-		if (req.session.user) res.locals.username = req.session.user;
+		if (req.session.user) res.locals.user = req.session.user;
 		res.render('form_offre');
 	}
 	else {
@@ -210,6 +210,12 @@ app.post('/offre',upload.array('docs',12), (req,res) => {
 	});
 })
 
+app.post('/prestation',(req,res)=>{
+	require('datatables.net');
+	require('datatables.net-editor-server');
+	//http_request('{"user":"' + conf.geduser.username + '","pass":"' + conf.geduser.password + '"}',"/login","POST",admin_connection,req,res);
+})
+
 // démarrage du serveur
 app.listen(conf.app.port, () => console.log(`Example app listening on port ${conf.app.port}!`));
 
@@ -232,7 +238,8 @@ function http_request(data, string_path,string_method,cb,orig_request_handle,ori
 
 	var post_options = {
 		method: string_method,
-		url:  'http://' + conf.gedportal.hostname + ":" + conf.gedportal.port + '/restapi/index.php' + string_path,
+		baseUrl: 'http://' + conf.gedportal.hostname + ":" + conf.gedportal.port,
+		url: '/restapi/index.php' + string_path,
 		headers: {}
 	};
 
@@ -262,9 +269,10 @@ function http_request(data, string_path,string_method,cb,orig_request_handle,ori
 		}
 	}
 
-	request(post_options, (error,response,body)=>{
-		if (error) throw error;
-			if (cb) cb(body,orig_request_handle,orig_response_handle,response)
+	request(post_options).on("response",(response)=>{
+		response.on('data',(chunk)=>{
+			if (cb) cb(chunk,orig_request_handle,orig_response_handle,response)
+		});
 	});
 }
 
@@ -331,7 +339,7 @@ function account_creation(chunk,orig_request_handle,orig_response_handle,res){
 
 //callback connection
 function user_connected(chunk,orig_request_handle,orig_response_handle,res){
-	console.log('chunk' + chunk)
+	console.log(chunk)
 	var success = JSON.parse(chunk).success;
 	if (success){
 		orig_request_handle.session.dms_session = res.headers['set-cookie'];

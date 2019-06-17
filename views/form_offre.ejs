@@ -4,93 +4,78 @@
 <div class="container-fluid">
   <div class="row-fluid">
     <legend>Appel d'offre</legend>
-    <form id="form-offre" action="/offre" method="post" enctype="multipart/form-data">
-
+    <form action="/offre" method="post" enctype="multipart/form-data">
       <input type="hidden" name="form" value="offre">
-
       <div class="form-group control-group col-md-2">
         <label for="selectMenu" class="control-label">Année :</label>
         <select id="selectMenu" class="custom-select" name="annee">
+
           <%a=new Date().getFullYear();for (var i = a; i < a+3; i++){b=i+1;%>
             <option value="<%-i%>-<%-b%>"><%-i%>-<%-b%></option>
             <%}%>
+
           </select>
         </div>
-      </div>
 
-      <div class="form-group control-group col-md-4">
-        <label for="sumSelector" class="control-label">Somme :</label><br />
-        <div class="btn-group btn-group-toggle" data-toggle="buttons" id="sumselector">
-          <label id="radio1" class="btn btn-secondary btn-sm">
-            <input type="radio" name="workflow" id="defaultGroupExample1" autocomplete="off" value ="6"> Moins de 5K
-          </label>
-          <label id="radio2" class="btn btn-secondary btn-sm">
-            <input type="radio" name="workflow" id="defaultGroupExample2" autocomplete="off" value ="7"> Entre 5K et 25K
-          </label>
-          <label id="radio3" class="btn btn-secondary btn-sm">
-            <input type="radio" name="workflow" id="defaultGroupExample3" autocomplete="off" value ="8"> Entre 25K et 90K
-          </label>
-          <label id="radio4" class="btn btn-secondary btn-sm">
-            <input type="radio" name="workflow" id="defaultGroupExample4" autocomplete="off" value ="9"> Plus de 90K
-          </label>
+
+        <div class="form-group control-group col-md-3">
+          <label class="control-label">Somme :</label>
+          <div  class="btn-group btn-group-toggle" data-toggle="buttons" id="sumselector">
+            <label id="radio1" class="btn btn-secondary btn-sm">
+              <input type="radio" name="workflow" id="defaultGroupExample1" autocomplete="off" value ="6"> Moins de 5K
+            </label>
+            <label id="radio2" class="btn btn-secondary btn-sm">
+              <input type="radio" name="workflow" id="defaultGroupExample2" autocomplete="off" value ="7"> Entre 5K et 25K
+            </label>
+            <label id="radio3" class="btn btn-secondary btn-sm">
+              <input type="radio" name="workflow" id="defaultGroupExample3" autocomplete="off" value ="8"> Entre 25K et 90K
+            </label>
+            <label id="radio4" class="btn btn-secondary btn-sm">
+              <input type="radio" name="workflow" id="defaultGroupExample4" autocomplete="off" value ="9"> Plus de 90K
+            </label>
+          </div>
         </div>
-      </div>
 
-      <div class="form-group control-group col-md-5" id="doc1" hidden="true">
-        <label class="control-label">Document(s) :</label>
-        <div class="custom-file">
-          <input type="file" name="docs" class="custom-file-input" lang="fr" id="inputGroupFile01" >
-          <label class="custom-file-label" for="inputGroupFile01" aria-describedby="inputGroupFileAddon01">Devis</label>
+        <div class="form-group control-group col-md-3" id="doc1" hidden="true">
+           <div class="custom-file">
+               <input type="file" name="docs" class="custom-file-input" lang="fr" id="inputGroupFile02" >
+               <label class="custom-file-label" for="inputGroupFile02" aria-describedby="inputGroupFileAddon02">Devis 1</label>
+            </div>
         </div>
-      </div>
-
-      <div class="form-group control-group col-md-5" id="doc2" hidden="true">
-        <div class="custom-file">
-          <input type="file" name="docs" class="custom-file-input" id="inputGroupFile02" lang="fr">
-          <label class="custom-file-label" for="inputGroupFile02" aria-describedby="inputGroupFileAddon02">RIB</label>
         </div>
-      </div>
-
-      <div class="form-group control-group col-md-5" id="doc3" hidden="true">
-        <label class="control-label">Document(s) :</label>
-        <div class="custom-file">
-          <input type="file" name="docs" class="custom-file-input" id="inputGroupFile03" lang="fr">
-          <label class="custom-file-label" for="inputGroupFile03" aria-describedby="inputGroupFileAddon03">PTF</label>
+        <div class="form-group control-group col-md-3" id="doc2" hidden="true">
+           <div class="custom-file">
+               <input type="file" name="docs" class="custom-file-input input-group-sm mb-3" id="inputGroupFile02" lang="fr">
+               <label class="custom-file-label" for="inputGroupFile02" aria-describedby="inputGroupFileAddon02">Devis 2</label>
+           </div>
         </div>
-      </div>
 
-      <div class="form-group control-group col-md-5" id="doc4" hidden="true">
-        <div class="custom-file">
-          <input type="file" name="docs" class="custom-file-input" id="inputGroupFile04" lang="fr">
-          <label class="custom-file-label" for="inputGroupFile04" aria-describedby="inputGroupFileAddon04">Extrait de K BIS</label>
+        <div class="form-group control-group col-md-3" id="doc3" hidden="true">
+           <div class="custom-file">
+                                <input type="file" name="docs" class="custom-file-input" id="inputGroupFile02" lang="fr">
+                                <label class="custom-file-label" for="inputGroupFile02" aria-describedby="inputGroupFileAddon02">Devis 3</label>
+                            </div>
         </div>
-      </div>
 
-      <div class="form-group control-group col-md-5" id="doc5" hidden="true">
-        <div class="custom-file">
-          <input type="file" name="docs" class="custom-file-input input-group-sm mb-3" id="inputGroupFile05" lang="fr">
-          <label class="custom-file-label" for="inputGroupFile05" aria-describedby="inputGroupFileAddon05">CV des enseignants présentis</label>
+        <div class="form-group control-group col-md-3" id="doc4" hidden="true">
+           <div class="custom-file">
+               <input type="file" name="docs" class="custom-file-input" id="inputGroupFile02" lang="fr">
+               <label class="custom-file-label" for="inputGroupFile02" aria-describedby="inputGroupFileAddon02">RIB</label>
+           </div>
         </div>
-      </div>
 
-      <div class="form-group control-group col-md-5" id="doc6" hidden="true">
-        <div class="custom-file">
-          <input type="file" name="docs" class="custom-file-input" id="inputGroupFile06" lang="fr">
-          <label class="custom-file-label" for="inputGroupFile06" aria-describedby="inputGroupFileAddon06">Copie des diplômes pour chaque enseignant</label>
+        <div class="form-group control-group col-md-3" id="doc5" hidden="true">
+           <div class="custom-file">
+               <input type="file" name="docs" class="custom-file-input" id="inputGroupFile02" lang="fr">
+               <label class="custom-file-label" for="inputGroupFile02" aria-describedby="inputGroupFileAddon02">PTF</label>
+           </div>
         </div>
-      </div>
 
-      <div class="form-group control-group col-md-5" id="doc7" hidden="true">
-        <div class="custom-file">
-          <input type="file" name="docs" class="custom-file-input" id="inputGroupFile07" lang="fr">
-          <label class="custom-file-label" for="inputGroupFile07" aria-describedby="inputGroupFileAddon07">Extrait de casier judiciaire</label>
-        </div>
-      </div>
-
-      <div class="form-group control-group col-md-5" id="doc8" hidden="true">
-        <div class="custom-file">
-          <input type="file" name="docs" class="custom-file-input" id="inputGroupFile08" lang="fr">
-          <label class="custom-file-label" for="inputGroupFile08" aria-describedby="inputGroupFileAddon09">Numéro de formateur (obligatoire si interventions en formation professionnelle)</label>
+        <div class="form-group control-group col-md-3" id="doc6" hidden="true">
+             <div class="custom-file">
+                 <input type="file" name="docs" class="custom-file-input" id="inputGroupFile02" lang="fr">
+                 <label class="custom-file-label" for="inputGroupFile02" aria-describedby="inputGroupFileAddon02">Publication</label>
+             </div>
         </div>
       </div>
 
@@ -140,12 +125,12 @@
 <script type="text/javascript">
 
   $('.custom-file input').change(function (e) {
-    var files = [];
-    for (var i = 0; i < $(this)[0].files.length; i++) {
-      files.push($(this)[0].files[i].name);
-    }
-    $(this).next('.custom-file-label').html(files.join(', '));
+      var files = [];
+      for (var i = 0; i < $(this)[0].files.length; i++) {
+          files.push($(this)[0].files[i].name);
+      }
+      $(this).next('.custom-file-label').html(files.join(', '));
   });
 
 </script>
-<% include footer %>
+  <% include footer %>
