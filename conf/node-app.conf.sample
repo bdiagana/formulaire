@@ -1,0 +1,31 @@
+; fichier de configuration de l'application
+[app]
+port = 3000
+
+[gedportal]
+hostname = localhost
+port = 80
+
+[geduser]
+username = username
+password = password
+
+[mail]
+user = contact@mail.com
+pass = password
+
+[mysql]
+hostname = localhost
+port = 3306
+db = databasename
+user = username
+pass = password
+
+[workflow]
+moins5k = 6
+entre5ket25k = 7
+entre25ket90k = 8
+plusde90k = 9
+
+[address]
+hostname = localhost
