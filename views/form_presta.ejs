@@ -93,6 +93,7 @@ var tradData={
             "zeroRecords": "Aucune donnée trouvée",
             "info": "Page _PAGE_ sur _PAGES_",
             "infoEmpty": "Aucune donnée disponisble",
+			"infoFiltered":"(filtrés depuis _MAX_ entrées)",
             "paginate": {
 				"first":"Premier",
 				"last":"Dernier",
@@ -106,6 +107,9 @@ var tradData={
                     1: "%d élément sélectionné",
 					0: ""
 				}
+			},
+			buttons: {
+				print: "Imprimer"
 			}
         };
 var tradEditor= {
@@ -282,7 +286,17 @@ $(document).ready(function() {
         buttons: [
             { extend: "create", editor: editorPresta },
             { extend: "edit",   editor: editorPresta },
-            { extend: "remove", editor: editorPresta }
+            { extend: "remove", editor: editorPresta },
+			{
+                extend: 'collection',
+                text: 'Export',
+                buttons: [
+                    'excel',
+                    'csv',
+                    'pdf',
+                    'print'
+                ]
+            }
         ],
 		 "columnDefs": [{ "targets": -1, "data": null, "defaultContent": "<button id='btnDetails' class='btn btn-success' width='25px'>Détails</button>"}]
     } );
@@ -307,9 +321,6 @@ $(document).ready(function() {
             }, {
                 label: "Quantité estimative:",
                 name: "quantite_estimative"
-            }, {
-                label: "Taux horaire H.T:",
-                name: "taux_horaire_ht"
             }
         ]
     } );
@@ -323,16 +334,36 @@ $(document).ready(function() {
             { data: "taux_horaire_ttc" },
             { data: "unite" },
 			{ data: "quantite_estimative" },
-			{ data: "taux_horaire_ht" },
-			{ data: "montant_total_ht" },
-			{ data: "tva" }
+			{ data: null, render: function ( data, type, row ) {
+				//Calcul automatique
+				data.taux_horaire_ht= data.taux_horaire_ttc/1.2;
+				return data.taux_horaire_ht;}
+			},
+			{ data: null, render: function ( data, type, row ) {
+                // Calcul le montant total HT
+                return data.quantite_estimative * data.taux_horaire_ht;}
+			},
+			{ data: null, render: function ( data, type, row ) {
+				//TVA récupérer de la prestations
+				return "20 %";}
+			}
         ],
         select: true,
 		"language": tradData,
         buttons: [
             { extend: "create", editor: editorAnnexe },
             { extend: "edit",   editor: editorAnnexe },
-            { extend: "remove", editor: editorAnnexe }
+            { extend: "remove", editor: editorAnnexe },
+			{
+                extend: 'collection',
+                text: 'Export',
+                buttons: [
+                    'excel',
+                    'csv',
+                    'pdf',
+                    'print'
+                ]
+            }
         ]
 	} );
 } );
