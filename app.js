@@ -135,6 +135,15 @@ app.get('/prestation', (req, res) => {
 	}
 });
 
+app.get('/prestations', (req,res) =>{
+	if (req.session.dms_session) {
+		var sql = "SELECT DISTINCT Formation.*, Intervenant.*, Prestation.*, Tarif.* FROM ";
+	}
+	else {
+		res.send('{"success":"false","message":"Not logged in"}');
+	}
+})
+
 app.post('/code',(req,res)=>{
 	//require('./response').verify_mail(req,res);
 	console.log("verif_mail");
