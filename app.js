@@ -147,6 +147,25 @@ app.get('/prestation', (req, res) => {
 	}
 });
 
+app.get('/prestations', (req,res) =>{
+	if (req.session.dms_session) {
+		var sql = `SELECT DISTINCT prestation.* ,formation.*, intervenant.*, tarif.*, annexe.* FROM prestation
+			INNER JOIN formation ON prestation.id = formation.idPrestation
+			INNER JOIN intervenant ON prestation.id = intervenant.idPrestation
+			INNER JOIN tarif ON prestation.id = tarif.idPrestation
+			INNER JOIN annexe ON prestation.id = annexe.idPrestation;`;
+		mysql.query(sql, (err,results,fields)=>{
+			if (err) throw err;
+			res.setHeader("Content-Type", "application/json")
+			res.end(JSON.stringify(results));
+		});
+	}
+	else {
+		// res.send('{"success":"false","message":"Not logged in"}');
+		res.redirect('/signin');
+	}
+})
+
 app.post('/code',(req,res)=>{
 	//require('./response').verify_mail(req,res);
 	loggit("verif_mail");
