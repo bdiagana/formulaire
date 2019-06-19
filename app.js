@@ -137,10 +137,26 @@ app.get('/prestation', (req, res) => {
 
 app.get('/prestations', (req,res) =>{
 	if (req.session.dms_session) {
-		var sql = `SELECT DISTINCT Prestation.* ,Formation.*, Intervenant.*, Tarif.* FROM Prestation
-			INNER JOIN Formation ON Prestation.id = Formation.idPrestation
-			INNER JOIN Intervenant ON Prestation.id = Intervenant.idPrestation
-			INNER JOIN Tarif ON Prestation.id = Tarif.idPrestation;`;
+		var sql = `SELECT DISTINCT prestation.* ,formation.*, intervenant.*, tarif.* FROM prestation
+			INNER JOIN formation ON prestation.id = formation.idPrestation
+			INNER JOIN intervenant ON prestation.id = intervenant.idPrestation
+			INNER JOIN tarif ON prestation.id = tarif.idPrestation;`;
+		mysql.query(sql, (err,results,fields)=>{
+			if (err) throw err;
+			res.setHeader("Content-Type", "application/json")
+			res.end(JSON.stringify(results));
+		});
+	}
+	else {
+		// res.send('{"success":"false","message":"Not logged in"}');
+		res.redirect('/signin');
+	}
+})
+
+app.get('/annexe', (req,res) =>{
+	if (req.session.dms_session) {
+		var sql = `SELECT annexe.* FROM annexe
+			INNER JOIN prestation ON annexe.idPrestation = prestation.id;`;
 		mysql.query(sql, (err,results,fields)=>{
 			if (err) throw err;
 			res.setHeader("Content-Type", "application/json")
