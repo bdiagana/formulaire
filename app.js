@@ -22,8 +22,8 @@ const mysql = require('mysql').createConnection({
 	charset: 'utf8'
 });
 const session = require('express-session');
-const datatable = require('datatables.net');
-const editor = require('datatables.net-editor-server');
+// const datatable = require('datatables.net');
+// const editor = require('datatables.net-editor-server');
 
 //variable de session dms
 var admin_session;
@@ -137,10 +137,19 @@ app.get('/prestation', (req, res) => {
 
 app.get('/prestations', (req,res) =>{
 	if (req.session.dms_session) {
-		var sql = "SELECT DISTINCT Formation.*, Intervenant.*, Prestation.*, Tarif.* FROM ";
+		var sql = `SELECT DISTINCT Prestation.* ,Formation.*, Intervenant.*, Tarif.* FROM Prestation
+			INNER JOIN Formation ON Prestation.id = Formation.idPrestation
+			INNER JOIN Intervenant ON Prestation.id = Intervenant.idPrestation
+			INNER JOIN Tarif ON Prestation.id = Tarif.idPrestation;`;
+		mysql.query(sql, (err,results,fields)=>{
+			if (err) throw err;
+			res.setHeader("Content-Type", "application/json")
+			res.end(JSON.stringify(results));
+		});
 	}
 	else {
-		res.send('{"success":"false","message":"Not logged in"}');
+		// res.send('{"success":"false","message":"Not logged in"}');
+		res.redirect('/signin');
 	}
 })
 
