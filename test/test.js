@@ -29,7 +29,7 @@ describe('Pages requested', function(){
       .end((err,res)=>{
         res.statusCode.should.be.equal(200);
         res.redirects.should.be.empty;
-        //res.should.not.have
+        //res.path.should.include('/signin');
         done();
       });
     });
@@ -52,14 +52,15 @@ describe('POST processes',function(){
   describe('POST /signin', function(){
     it('should connect user', function(done){
       let user = {
-        user: "test",
-        pass: "test"
+        user: "admin",
+        pass: "admin"
       };
       chai.request(app)
       .post('/signin')
       .send(user)
       .end((err,res)=>{
         res.statusCode.should.be.equal(200);
+        res.redirects.should.not.be.empty;
         res.redirects[0].should.include("/offre");
         done();
       });
