@@ -4,7 +4,7 @@
 <div class="container-fluid">
   <div class="row-fluid">
     <legend>Prestations</legend>
-    
+
         <div class="form-group control-group ">
           <div  class="btn-group btn-group-toggle" data-toggle="buttons" id="sumselector">
             <label id="radio3" class="btn btn-secondary btn-sm">
@@ -18,7 +18,7 @@
 
         <div class="form-group control-group" id="doc1" hidden="true">
            <div class="custom-file">
-               <span>Identifiants de la prestations 
+               <span>Identifiants de la prestations
 					<select id="numPrestations" >
 					</select>
 				</span>
@@ -80,7 +80,7 @@
 			</table>
         </div>
       </div>
-	  
+
   </div>
 </div>
 <script type="text/javascript">
@@ -146,7 +146,7 @@ var tradEditor= {
 $(document).ready(function() {
 	//tableau Prestations
     editorPresta = new $.fn.dataTable.Editor( {
-        //ajax: "../php/staff.php",
+        // ajax: "/prestations",
         table: "#tablePresta",
         i18n: tradEditor,
 		fields: [ {
@@ -245,10 +245,10 @@ $(document).ready(function() {
             }
         ]
     } );
- 
+
     $('#tablePresta').DataTable( {
         dom: "Bfrtip",
-        //ajax: "../php/staff.php",
+        ajax: "/prestations",
 		"scrollX": true,
 		"language": tradData,
         columns: [
@@ -300,7 +300,7 @@ $(document).ready(function() {
         ],
 		 "columnDefs": [{ "targets": -1, "data": null, "defaultContent": "<button id='btnDetails' class='btn btn-success' width='25px'>Détails</button>"}]
     } );
-	
+
 	//Tableau Annexes
     editorAnnexe = new $.fn.dataTable.Editor( {
         //ajax: "../php/staff.php",
@@ -324,7 +324,7 @@ $(document).ready(function() {
             }
         ]
     } );
- 
+
     $('#tableAnnexe').DataTable( {
         dom: "Bfrtip",
         //ajax: "../php/staff.php",
