@@ -151,7 +151,7 @@ $(document).ready(function() {
         i18n: tradEditor,
 		fields: [ {
                 label: "Responsable suivi marché:",
-                name: "responsable_suivi_marche",
+                name: "responsable",
 				type:  "select",
                 options: [
                     { label: "Mohamed Bougga", value: "Mohamed Bougga" },
@@ -253,7 +253,7 @@ $(document).ready(function() {
 		"language": tradData,
         columns: [
 			{ visible: false, data: null},
-            { data: "responsable_suivi_marche"},
+            { data: "responsable"},
             { data: "autre_coordinateur" },
             { data: "urgent" },
 			{ data: "matiere" },
@@ -265,21 +265,21 @@ $(document).ready(function() {
 			{ data: "tarif_ttc_niv3" },
 			{ data: "tarif_ttc_coding" },
 			{ data: "tarif_ttc_fcp1" },
-			{ data: "nb_heures_tarif_fcp1" },
+			{ data: "h_tarif_fcp1" },
 			{ data: "tarif_ttc_fcp2" },
-			{ data: "nb_heures_tarif_fcp2" },
-			{ data: "tarif_ttc_fcp3" },
-			{ data: "nb_heures_tarif_fcp3" },
+			{ data: "h_tarif_fcp2 " },
+			{ data: "tarif_ttc_FCP3" },
+			{ data: "h_tarif_fcp3" },
 			{ data: "tarif_ttc_fcp4" },
-			{ data: "nb_heures_tarif_fcp4" },
-			{ data: "vis_ent_tarif1" },
-			{ data: "nb_heures_vis_ent_tarif1" },
-			{ data: "vis_tel_tarif2" },
-			{ data: "nb_heures_vis_tel_tarif2" },
-			{ data: "vis_ent_tarif3" },
-			{ data: "nb_heures_vis_tarif3" },
-			{ data: "sre_tarif_ttc" },
-			{ data: "sre_nb_heures" },
+			{ data: "h_tarif_fcp4" },
+			{ data: "tarif_vis_ent1" },
+			{ data: "h_visite_ent1" },
+			{ data: "tarif_vis_ent2" },
+			{ data: "h_visite_ent2" },
+			{ data: "tarif_vis_ent3" },
+			{ data: "h_visite_ent3" },
+			{ data: "tarif_sre" },
+			{ data: "h_sre" },
             { data: "formation1" }
         ],
         select: true,
@@ -327,13 +327,13 @@ $(document).ready(function() {
 
     $('#tableAnnexe').DataTable( {
         dom: "Bfrtip",
-        //ajax: "../php/staff.php",
+        ajax: "/annexe",
         columns: [
             { data: "designation"},
             { data: "formation" },
             { data: "taux_horaire_ttc" },
             { data: "unite" },
-			{ data: "quantite_estimative" },
+			{ data: "quantite" },
 			{ data: null, render: function ( data, type, row ) {
 				//Calcul automatique
 				data.taux_horaire_ht= data.taux_horaire_ttc/1.2;
@@ -341,11 +341,12 @@ $(document).ready(function() {
 			},
 			{ data: null, render: function ( data, type, row ) {
                 // Calcul le montant total HT
-                return data.quantite_estimative * data.taux_horaire_ht;}
+                return data.quantite * data.taux_horaire_ht;}
 			},
 			{ data: null, render: function ( data, type, row ) {
 				//TVA récupérer de la prestations
-				return "20 %";}
+				data.tva="20 %"
+				return data.tva;}
 			}
         ],
         select: true,
