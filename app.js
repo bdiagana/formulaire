@@ -22,8 +22,8 @@ const mysql = require('mysql').createConnection({
 	charset: 'utf8'
 });
 const session = require('express-session');
-const logger = require('morgan');
-
+// const datatable = require('datatables.net');
+// const editor = require('datatables.net-editor-server');
 
 //variable de session dms
 var admin_session;
@@ -35,7 +35,6 @@ var id_document_attach;
 var upload = multer({ dest: 'uploads/' })
 
 // middleware
-app.use(logger('dev'))
 app.use(express.urlencoded());
 app.use(express.json());
 app.use(express.static(__dirname + '/public'));
@@ -44,7 +43,7 @@ app.use(session({
 	resave: false,
 	saveUninitialized: true,
 	cookie: { secure: false }
-}));
+}))
 
 // paramétrage moteur de template
 app.set('view engine', 'ejs')
@@ -74,7 +73,6 @@ app.get('/signin', (req, res) => {
 			res.locals.error = req.session.error;
 			req.session.error = undefined;
 		}
-
 		res.render('form_login');
 	}
 });
@@ -87,18 +85,8 @@ app.get('/signup', (req, res) => {
 app.get('/offre', (req, res) => {
 
 	if (req.session.dms_session) {
-		if (req.session.user) res.locals.username = req.session.user;
-
-		const { moins5k, entre5ket25k, entre25ket90k, plusde90k } = conf.workflow ;
-
-		var data = {
-			moins5k: moins5k,
-			entre5ket25k: entre5ket25k,
-			entre25ket90k: entre25ket90k,
-			plusde90k: plusde90k
-		}
-
-		res.render('form_offre', data);
+		if (req.session.user) res.locals.user = req.session.user;
+		res.render('form_offre');
 	}
 	else {
 		req.session.error = "Veuillez vous connecter";
@@ -122,7 +110,7 @@ app.get('/verify', (req, res) => {
 
 	if (query && variable){
 		mysql.query(query , variable,(error,results,fields) => {
-			if (error) loggit(error);
+			if (error) throw error;
 			if(results.length > 0){
 				res.codeStatus = 200;
 				res.send('1');
@@ -149,11 +137,26 @@ app.get('/prestation', (req, res) => {
 
 app.get('/prestations', (req,res) =>{
 	if (req.session.dms_session) {
-		var sql = `SELECT DISTINCT prestation.* ,formation.*, intervenant.*, tarif.*, annexe.* FROM prestation
+		var sql = `SELECT DISTINCT prestation.* ,formation.*, intervenant.*, tarif.* FROM prestation
 			INNER JOIN formation ON prestation.id = formation.idPrestation
 			INNER JOIN intervenant ON prestation.id = intervenant.idPrestation
-			INNER JOIN tarif ON prestation.id = tarif.idPrestation
-			INNER JOIN annexe ON prestation.id = annexe.idPrestation;`;
+			INNER JOIN tarif ON prestation.id = tarif.idPrestation;`;
+		mysql.query(sql, (err,results,fields)=>{
+			if (err) throw err;
+			res.setHeader("Content-Type", "application/json")
+			res.end(JSON.stringify(results));
+		});
+	}
+	else {
+		// res.send('{"success":"false","message":"Not logged in"}');
+		res.redirect('/signin');
+	}
+})
+
+app.get('/annexe', (req,res) =>{
+	if (req.session.dms_session) {
+		var sql = `SELECT annexe.* FROM annexe
+			INNER JOIN prestation ON annexe.idPrestation = prestation.id;`;
 		mysql.query(sql, (err,results,fields)=>{
 			if (err) throw err;
 			res.setHeader("Content-Type", "application/json")
@@ -168,10 +171,10 @@ app.get('/prestations', (req,res) =>{
 
 app.post('/code',(req,res)=>{
 	//require('./response').verify_mail(req,res);
-	loggit("verif_mail");
+	console.log("verif_mail");
 	query = 'SELECT * FROM verif_mail WHERE mail = ? AND code = ? LIMIT 1;';
 	mysql.query(query,[req.body.mail,req.body.code],(error,results,fields)=> {
-		if (error) loggit(error);
+		if (error) throw error;
 		if(results.length > 0){
 			update_result(results,req,res);
 		}
@@ -203,24 +206,26 @@ app.post('/offre',upload.array('docs',12), (req,res) => {
 	// 	res.redirect("/offre");
 	// }
 
+	console.log(JSON.stringify(req.files));
+
 	files_to_upload = req.files;
 
 	var query_folder = "SELECT homefolder FROM tblUsers WHERE login = ?";
 
 	mysql.query(query_folder, [req.session.user], (error,results,fields)=>{
-		if (error) loggit(error);
+		if (error) throw error;
 		var folder = results[0].homefolder;
-		loggit("folder : " + folder);
+		console.log("folder : " + folder);
 
 		var query_test_folder = "SELECT id,parent FROM tblFolders WHERE name = ?";
 
 		var annee = req.body.annee;
 
 		mysql.query(query_test_folder,[annee],(error,results2,fields)=>{
-			if (error) loggit(error);
+			if (error) throw error;
 
 			if (results2[0] === undefined || results2[0].parent != folder){
-				loggit("creation du dossier année : " + annee + " pour l'utilisateur : " + req.session.user);
+				console.log("creation du dossier année : " + annee + " pour l'utilisateur : " + req.session.user);
 				var data = {
 					name: annee
 				};
@@ -228,10 +233,10 @@ app.post('/offre',upload.array('docs',12), (req,res) => {
 				http_request(JSON.stringify(data),"/folder/"+folder+"/createfolder","POST",offre_folder_created,req,res,req.session.dms_session);
 			}
 			else {
-				loggit("dossier année : " + annee + " déjà présent pour l'utilisateur : " + req.session.user);
+				console.log("dossier année : " + annee + " déjà présent pour l'utilisateur : " + req.session.user);
 				var id_folder = results2[0].id;
 				var data = files_to_upload.shift();
-				loggit("data to send :" + JSON.stringify(data))
+				console.log("data to send :" + JSON.stringify(data))
 				var dms_session = req.session.dms_session;
 				http_request(data,"/folder/"+id_folder+"/document","POST",document_uploaded,req,res,dms_session);
 			}
@@ -239,12 +244,25 @@ app.post('/offre',upload.array('docs',12), (req,res) => {
 	});
 })
 
+app.post('/prestation',(req,res)=>{
+	require('datatables.net');
+	require('datatables.net-editor-server');
+	//http_request('{"user":"' + conf.geduser.username + '","pass":"' + conf.geduser.password + '"}',"/login","POST",admin_connection,req,res);
+})
+
+
+app.post('/prestation',(req,res)=>{
+	require('datatables.net');
+	require('datatables.net-editor-server');
+	//http_request('{"user":"' + conf.geduser.username + '","pass":"' + conf.geduser.password + '"}',"/login","POST",admin_connection,req,res);
+})
+
 // démarrage du serveur
-app.listen(conf.app.port, () => loggit(`Example app listening on port ${conf.app.port}!`));
+app.listen(conf.app.port, () => console.log(`Example app listening on port ${conf.app.port}!`));
 
 // callback détail compte. @deprecated
 function account(chunk){
-	loggit(chunk);
+	console.log(chunk);
 	mydms_session=null;
 	http_request("{}","/logout","GET",disconnect);
 }
@@ -261,28 +279,27 @@ function http_request(data, string_path,string_method,cb,orig_request_handle,ori
 
 	var post_options = {
 		method: string_method,
-		url:  'http://' + conf.gedportal.hostname + ":" + conf.gedportal.port + '/restapi/index.php' + string_path,
+		baseUrl: 'http://' + conf.gedportal.hostname + ":" + conf.gedportal.port,
+		url: '/restapi/index.php' + string_path,
 		headers: {}
 	};
 
-	loggit(post_options.url)
-
 	if (dms_session && dms_session != ""){
 		post_options.headers["Cookie"] = dms_session;
-		loggit('user cookie sent');
+		console.log('user cookie sent');
 	}
 	else if (admin_session && admin_session != ""){
 		post_options.headers["Cookie"] = admin_session;
-		loggit('admin cookie sent');
+		console.log('admin cookie sent');
 	}
 	else {
-		loggit('no cookie sent');
+		console.log('no cookie sent');
 	}
 
 	if (typeof data === 'string' || data instanceof String){
 		post_options.headers["content-type"] = "application/json";
 		post_options.body = data
-		loggit("data de type string")
+		console.log("data de type string")
 	}
 	else {
 		post_options.headers["content-type"] = "multipart/form-data";
@@ -293,9 +310,10 @@ function http_request(data, string_path,string_method,cb,orig_request_handle,ori
 		}
 	}
 
-	request(post_options, (error,response,body)=>{
-		if (error) loggit(error);
-			if (cb) cb(body,orig_request_handle,orig_response_handle,response)
+	request(post_options).on("response",(response)=>{
+		response.on('data',(chunk)=>{
+			if (cb) cb(chunk,orig_request_handle,orig_response_handle,response)
+		});
 	});
 }
 
@@ -308,9 +326,9 @@ function admin_connection(chunk,orig_request_handle,orig_response_handle,res){
 		if (success) {
 			admin_session = res.headers['set-cookie'];
 
-			loggit('connection admin : ' + chunk)
+			console.log('connection admin : ' + chunk)
 
-			loggit('ad : ' + admin_session);
+			console.log('ad : ' + admin_session);
 			// infos supplémentaires client concaténées dans les commentaire
 			//	var comment = `${orig_request_handle.body.societe}
 			//	${orig_request_handle.body.adresse}
@@ -333,13 +351,13 @@ function admin_connection(chunk,orig_request_handle,orig_response_handle,res){
 				comment: comment
 			};
 
-			loggit('creation');
+			console.log('creation');
 
 			// requete création de compte
 			http_request(JSON.stringify(account_informations),'/users','POST',account_creation,orig_request_handle,orig_response_handle);
 		}
 		else {
-			loggit('erreur 500');
+			console.log('erreur 500');
 			orig_response_handle.status(500).end();
 			return
 		}
@@ -352,7 +370,7 @@ function admin_connection(chunk,orig_request_handle,orig_response_handle,res){
 // callback création de compte
 function account_creation(chunk,orig_request_handle,orig_response_handle,res){
 	if (JSON.parse(chunk).success) {
-		loggit('creation compte : \n' + chunk);
+		console.log('creation compte : \n' + chunk);
 		http_request('{"disable":"true"}',"/users/" + orig_request_handle.body.user + "/disable",'PUT',user_disabled,orig_request_handle,orig_response_handle);
 	}
 	else {
@@ -362,12 +380,12 @@ function account_creation(chunk,orig_request_handle,orig_response_handle,res){
 
 //callback connection
 function user_connected(chunk,orig_request_handle,orig_response_handle,res){
-	loggit('chunk' + chunk)
+	console.log(chunk)
 	var success = JSON.parse(chunk).success;
 	if (success){
 		orig_request_handle.session.dms_session = res.headers['set-cookie'];
 		orig_request_handle.session.user = orig_request_handle.body.user;
-		loggit(orig_request_handle.session.dms_session);
+		console.log(orig_request_handle.session.dms_session);
 		orig_response_handle.redirect("/offre");
 	}
 	else {
@@ -388,12 +406,12 @@ function user_disabled(chunk,orig_request_handle,orig_response_handle,res){
 			var code_verif = require('hat')();
 
 			mysql.query('INSERT INTO verif_mail (`id`,`mail`,`code`,`verified`) VALUES (?,?,?,?);',[orig_request_handle.body.user,orig_request_handle.body.mail,code_verif,false],(error,results,fields)=>{
-				if (error) loggit(error);
-				loggit("Insertion reussie")
+				if (error) throw error;
+				console.log("Insrtion reussie")
 			});
 
 			var mailOptions = {
-				from: conf.mail.user,
+				from: 'ged@edu.itescia.fr',
 				to: orig_request_handle.body.mail,
 				subject: 'Votre code d\'activation pour GEDi',
 				text: 'Voici le code à entrer : ' + code_verif
@@ -401,30 +419,30 @@ function user_disabled(chunk,orig_request_handle,orig_response_handle,res){
 
 			mail.sendMail(mailOptions, function(error, info){
 				if (error) {
-					loggit(error);
+					console.log(error);
 				} else {
-					loggit('Email sent: ' + info.response);
+					console.log('Email sent: ' + info.response);
 				}
 			});
 			orig_response_handle.render("./form_code", {mail: orig_request_handle.body.mail});
 		}
 		else {
-			loggit('user not disabled' + chunk)
+			console.log('user not disabled' + chunk)
 			resign_up(orig_request_handle,orig_response_handle)
 		}
 	}
 }
 
 function disconnect(chunk){
-	loggit('admin disconnected : ' + chunk);
+	console.log('admin disconnected : ' + chunk);
 }
 
 function update_result(results,req,res){
 	var user = results[0].id;
-	loggit(user + " activated with : " + req.body.code);
+	console.log(user + " activated with : " + req.body.code);
 	mysql.query('UPDATE verif_mail SET verified = true WHERE code = ?;', [req.body.code],(error,results,fields)=> {
-		if (error) loggit(error);
-		loggit(JSON.stringify(results));
+		if (error) throw error;
+		console.log(JSON.stringify(results));
 		http_request('{"disable": "false"}',"/users/"+user+"/disable",'PUT',user_reactivated,req,res);
 	});
 }
@@ -439,19 +457,19 @@ function user_reactivated(chunk,orig_request_handle,orig_response_handle){
 		http_request(JSON.stringify(data),"/folder/22/createfolder","POST",folder_created,orig_request_handle,orig_response_handle);
 	}
 	else {
-		loggit("failed user reactivate : " + chunk);
+		console.log("failed user reactivate : " + chunk);
 		resign_up(orig_request_handle,orig_response_handle)
 	}
 }
 
 function folder_created(chunk,orig_request_handle,orig_response_handle,res){
 	if (JSON.parse(chunk).success){
-		loggit("kfzmlkfdmlzkfdml" +  chunk)
+		console.log("kfzmlkfdmlzkfdml" +  chunk)
 		var user = JSON.parse(chunk).data.name;
 		var id = JSON.parse(chunk).data.id;
 		mysql.query("UPDATE tblUsers SET homefolder = ? WHERE login = ?",[id,user],(error,results,fields) =>{
-			if (error) loggit(error);
-			loggit(results);
+			if (error) throw error;
+			console.log(results);
 
 			var data = {
 				id: user,
@@ -462,22 +480,22 @@ function folder_created(chunk,orig_request_handle,orig_response_handle,res){
 		});
 	}
 	else {
-		loggit("failed folder creation : " + chunk);
+		console.log("failed folder creation : " + chunk);
 		resign_up(orig_request_handle,orig_response_handle)
 	}
 }
 
 function offre_folder_created(chunk,orig_request_handle,orig_response_handle,res){
-	loggit(chunk)
+	console.log(chunk)
 	if (JSON.parse(chunk).success){
 		var id_folder = JSON.parse(chunk).data.id;
 		var data = files_to_upload.shift();
-		loggit("document à upload" + JSON.stringify(data))
+		console.log("document à upload" + JSON.stringify(data))
 		var dms_session = orig_request_handle.session.dms_session;
 		http_request(data,"/folder/"+id_folder+"/document","POST",document_uploaded,orig_request_handle,orig_response_handle,dms_session);
 	}
 	else {
-		loggit("erreur lors de la création du folder : " + chunk)
+		console.log("erreur lors de la création du folder : " + chunk)
 	}
 }
 
@@ -485,45 +503,35 @@ function folder_access_granted(chunk,orig_request_handle,orig_response_handle,re
 	if (JSON.parse(chunk).success){
 		var user = JSON.parse(chunk).message;
 		mysql.query("SELECT id FROM tblUsers WHERE login = ?", [user],(error,results,fields)=>{
-			if (error) loggit(error);
+			if (error) throw error;
 			var id = results[0].id;
 			mysql.query("UPDATE tblFolders SET owner = ? WHERE name = ?",[id,user],(error,results,fields)=>{
-				if (error) loggit(error);
-				loggit("account created successfully")
+				if (error) throw error;
+				console.log("account created successfully")
 				orig_response_handle.redirect("/signin");
 			});
 		});
 	}
 	else {
-		loggit("failed access grant : " + chunk);
+		console.log("failed access grant : " + chunk);
 		resign_up(orig_request_handle,orig_response_handle);
 	}
 }
 
 function document_uploaded(chunk,orig_request_handle,orig_response_handle,res){
-
-	loggit("chunked : " + chunk)
-	var dms_session = orig_request_handle.session.dms_session;
 	if (JSON.parse(chunk).success){
+		console.log('doc uploaded : ' + chunk)
+		console.log(files_to_upload)
 		if (files_to_upload.length > 0){
-			if(JSON.parse(chunk).data.id && JSON.parse(chunk).data.id != "") {
-				id_document_attach = JSON.parse(chunk).data.id;
-				var data = {
-					workflow: orig_request_handle.body.workflow
-				};
-				http_request(JSON.stringify(data),"/document/"+id_document_attach+"/workflow","POST",document_uploaded,orig_request_handle,orig_response_handle,dms_session)
-			}
-			else {
-				var data = files_to_upload.shift();
-				http_request(data,"/document/"+id_document_attach+"/attachment","POST",document_uploaded,orig_request_handle,orig_response_handle,dms_session)
-			}
+			if(JSON.parse(chunk).data.id && JSON.parse(chunk).data.id != "") id_document_attach = JSON.parse(chunk).data.id;
+			var dms_session = orig_request_handle.session.dms_session;
+			var data = files_to_upload.shift();
+			http_request(data,"/document/"+id_document_attach+"/attachment","POST",document_uploaded,orig_request_handle,orig_response_handle,dms_session)
 		}
-		else orig_response_handle.render('form_success',{url: "http://" + conf.address.hostname + ":" + conf.gedportal.port});
+		else orig_response_handle.render('form_success',{url: "http://" + conf.gedportal.hostname + ":" + conf.gedportal.port});
 	}
-	else loggit("fail to attach or upload file"+ chunk)
+	else console.log("fail to attach or upload file"+ chunk)
 }
-
-
 
 function resign_up(orig_request_handle,orig_response_handle){
 	var infos_back = {
@@ -540,11 +548,5 @@ function resign_up(orig_request_handle,orig_response_handle){
 	};
 
 	orig_response_handle.render("form_creation", infos_back);
-	loggit('triste')
-}
-
-module.exports = app;
-
-function loggit(msg){
-	if (process.env.NODE_ENV != 'test') console.log(msg);
+	console.log('triste')
 }
