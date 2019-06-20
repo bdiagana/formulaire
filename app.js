@@ -122,7 +122,7 @@ app.get('/verify', (req, res) => {
 
 	if (query && variable){
 		mysql.query(query , variable,(error,results,fields) => {
-			if (error) throw error;
+			if (error) loggit(error);
 			if(results.length > 0){
 				res.codeStatus = 200;
 				res.send('1');
@@ -152,7 +152,7 @@ app.post('/code',(req,res)=>{
 	loggit("verif_mail");
 	query = 'SELECT * FROM verif_mail WHERE mail = ? AND code = ? LIMIT 1;';
 	mysql.query(query,[req.body.mail,req.body.code],(error,results,fields)=> {
-		if (error) throw error;
+		if (error) loggit(error);
 		if(results.length > 0){
 			update_result(results,req,res);
 		}
@@ -189,7 +189,7 @@ app.post('/offre',upload.array('docs',12), (req,res) => {
 	var query_folder = "SELECT homefolder FROM tblUsers WHERE login = ?";
 
 	mysql.query(query_folder, [req.session.user], (error,results,fields)=>{
-		if (error) throw error;
+		if (error) loggit(error);
 		var folder = results[0].homefolder;
 		loggit("folder : " + folder);
 
@@ -198,7 +198,7 @@ app.post('/offre',upload.array('docs',12), (req,res) => {
 		var annee = req.body.annee;
 
 		mysql.query(query_test_folder,[annee],(error,results2,fields)=>{
-			if (error) throw error;
+			if (error) loggit(error);
 
 			if (results2[0] === undefined || results2[0].parent != folder){
 				loggit("creation du dossier année : " + annee + " pour l'utilisateur : " + req.session.user);
@@ -275,7 +275,7 @@ function http_request(data, string_path,string_method,cb,orig_request_handle,ori
 	}
 
 	request(post_options, (error,response,body)=>{
-		if (error) throw error;
+		if (error) loggit(error);
 			if (cb) cb(body,orig_request_handle,orig_response_handle,response)
 	});
 }
@@ -369,7 +369,7 @@ function user_disabled(chunk,orig_request_handle,orig_response_handle,res){
 			var code_verif = require('hat')();
 
 			mysql.query('INSERT INTO verif_mail (`id`,`mail`,`code`,`verified`) VALUES (?,?,?,?);',[orig_request_handle.body.user,orig_request_handle.body.mail,code_verif,false],(error,results,fields)=>{
-				if (error) throw error;
+				if (error) loggit(error);
 				loggit("Insertion reussie")
 			});
 
@@ -404,7 +404,7 @@ function update_result(results,req,res){
 	var user = results[0].id;
 	loggit(user + " activated with : " + req.body.code);
 	mysql.query('UPDATE verif_mail SET verified = true WHERE code = ?;', [req.body.code],(error,results,fields)=> {
-		if (error) throw error;
+		if (error) loggit(error);
 		loggit(JSON.stringify(results));
 		http_request('{"disable": "false"}',"/users/"+user+"/disable",'PUT',user_reactivated,req,res);
 	});
@@ -427,11 +427,11 @@ function user_reactivated(chunk,orig_request_handle,orig_response_handle){
 
 function folder_created(chunk,orig_request_handle,orig_response_handle,res){
 	if (JSON.parse(chunk).success){
-		loggit("kfzmlkfdmlzkfdml" +  chunk)
+		loggit("folder successfuly created : " +  chunk)
 		var user = JSON.parse(chunk).data.name;
 		var id = JSON.parse(chunk).data.id;
 		mysql.query("UPDATE tblUsers SET homefolder = ? WHERE login = ?",[id,user],(error,results,fields) =>{
-			if (error) throw error;
+			if (error) loggit(error);
 			loggit(results);
 
 			var data = {
@@ -466,10 +466,10 @@ function folder_access_granted(chunk,orig_request_handle,orig_response_handle,re
 	if (JSON.parse(chunk).success){
 		var user = JSON.parse(chunk).message;
 		mysql.query("SELECT id FROM tblUsers WHERE login = ?", [user],(error,results,fields)=>{
-			if (error) throw error;
+			if (error) loggit(error);
 			var id = results[0].id;
 			mysql.query("UPDATE tblFolders SET owner = ? WHERE name = ?",[id,user],(error,results,fields)=>{
-				if (error) throw error;
+				if (error) loggit(error);
 				loggit("account created successfully")
 				orig_response_handle.redirect("/signin");
 			});
@@ -482,29 +482,47 @@ function folder_access_granted(chunk,orig_request_handle,orig_response_handle,re
 }
 
 function document_uploaded(chunk,orig_request_handle,orig_response_handle,res){
-
 	loggit("chunked : " + chunk)
 	var dms_session = orig_request_handle.session.dms_session;
 	if (JSON.parse(chunk).success){
 		if (files_to_upload.length > 0){
 			if(JSON.parse(chunk).data.id && JSON.parse(chunk).data.id != "") {
 				id_document_attach = JSON.parse(chunk).data.id;
-				var data = {
-					workflow: orig_request_handle.body.workflow
-				};
-				http_request(JSON.stringify(data),"/document/"+id_document_attach+"/workflow","POST",document_uploaded,orig_request_handle,orig_response_handle,dms_session)
+				loggit("id document : " + id_document_attach)
 			}
-			else {
-				var data = files_to_upload.shift();
-				http_request(data,"/document/"+id_document_attach+"/attachment","POST",document_uploaded,orig_request_handle,orig_response_handle,dms_session)
-			}
+			var data = files_to_upload.shift();
+			http_request(data,"/document/"+id_document_attach+"/attachment","POST",document_uploaded,orig_request_handle,orig_response_handle,dms_session)
 		}
-		else orig_response_handle.render('form_success',{url: "http://" + conf.address.hostname + ":" + conf.gedportal.port});
+		else {
+			//http_request('{"user":"' + conf.geduser.username + '","pass":"' + conf.geduser.password + '"}',"/login","POST",admin_co_workflow,orig_request_handle,orig_response_handle
+			orig_response_handle.render('form_success',{url: "http://" + conf.address.hostname + ":" + conf.gedportal.port});
+		);
+		}
 	}
 	else loggit("fail to attach or upload file"+ chunk)
 }
 
+function workflow_setted(chunk,orig_request_handle,orig_response_handle,res){
+	if (JSON.parse(chunk).success){
+		orig_response_handle.render('form_success',{url: "http://" + conf.address.hostname + ":" + conf.gedportal.port});
+	}
+	else {
+		loggit("ça na pas marche")
+	}
+}
 
+function admin_co_workflow(chunk,orig_request_handle,orig_response_handle,res){
+	if (JSON.parse(chunk).success){
+		admin_session = res.headers['set-cookie'];
+		var data = {
+			workflow: orig_request_handle.body.workflow
+		};
+		http_request(JSON.stringify(data),"/document/"+id_document_attach+"/workflow","POST",workflow_setted,orig_request_handle,orig_response_handle)
+	}
+	else{
+
+	}
+}
 
 function resign_up(orig_request_handle,orig_response_handle){
 	var infos_back = {
