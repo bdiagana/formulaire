@@ -212,8 +212,11 @@ app.post('/offre',upload.array('docs',12), (req,res) => {
 				loggit("dossier année : " + annee + " déjà présent pour l'utilisateur : " + req.session.user);
 				var id_folder = results2[0].id;
 				var data = files_to_upload.shift();
+				data.mpname = "MP-O1CF"
+				data.filename= data.originalname
 				loggit("data to send :" + JSON.stringify(data))
 				var dms_session = req.session.dms_session;
+				data.mpname = "MP-01CF"
 				http_request(data,"/folder/"+id_folder+"/document","POST",document_uploaded,req,res,dms_session);
 			}
 		});
@@ -269,7 +272,8 @@ function http_request(data, string_path,string_method,cb,orig_request_handle,ori
 		post_options.headers["content-type"] = "multipart/form-data";
 		post_options.formData = {
 			file: fs.createReadStream(data.path),
-			name: data.originalname,
+			name: data.mpname || data.originalname,
+			origfilename: data.originalname,
 			"Content-Type": data.mimetype
 		}
 	}
@@ -455,6 +459,7 @@ function offre_folder_created(chunk,orig_request_handle,orig_response_handle,res
 		var data = files_to_upload.shift();
 		loggit("document à upload" + JSON.stringify(data))
 		var dms_session = orig_request_handle.session.dms_session;
+		data.mpname = "MP-01CF"
 		http_request(data,"/folder/"+id_folder+"/document","POST",document_uploaded,orig_request_handle,orig_response_handle,dms_session);
 	}
 	else {
@@ -496,7 +501,6 @@ function document_uploaded(chunk,orig_request_handle,orig_response_handle,res){
 		else {
 			//http_request('{"user":"' + conf.geduser.username + '","pass":"' + conf.geduser.password + '"}',"/login","POST",admin_co_workflow,orig_request_handle,orig_response_handle
 			orig_response_handle.render('form_success',{url: "http://" + conf.address.hostname + ":" + conf.gedportal.port});
-		);
 		}
 	}
 	else loggit("fail to attach or upload file"+ chunk)
